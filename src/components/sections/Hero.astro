@@ -1,0 +1,94 @@
+---
+import Terminal, { type TerminalLine } from '../ui/Terminal';
+import { getLocale, t, localePath, type Locale } from '../../i18n/ui';
+import { SITE } from '../../data/site';
+
+const locale: Locale = getLocale(Astro.url);
+const ui = t(locale);
+const base = localePath(locale, '/');
+
+const lines: TerminalLine[] = [
+	{ kind: 'cmd', text: 'whoami' },
+	{ kind: 'out', text: SITE.name },
+	{ kind: 'blank' },
+	{ kind: 'cmd', text: 'cat role.txt' },
+	{ kind: 'out', text: ui.terminal.bio },
+	{ kind: 'blank' },
+	{ kind: 'cmd', text: 'ls stack/' },
+	{ kind: 'tags', items: ['react', 'next.js', 'typescript', 'python', 'fastapi', 'mongodb'] },
+	{ kind: 'blank' },
+	{ kind: 'cmd', text: 'echo $STATUS' },
+	{ kind: 'out', text: `● ${ui.hero.available}`, tone: 'accent' },
+];
+---
+
+<section class="relative overflow-hidden">
+	<!-- textura de fondo -->
+	<div class="pointer-events-none absolute inset-0 bg-grid mask-fade-b opacity-[0.5]" aria-hidden="true"></div>
+	<div
+		class="pointer-events-none absolute left-1/2 top-[-10%] h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-accent/10 blur-[120px]"
+		aria-hidden="true"
+	>
+	</div>
+
+	<div class="relative mx-auto max-w-6xl px-5 pb-20 pt-28 sm:px-8 sm:pb-28 sm:pt-36">
+		<div class="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14">
+			<!-- columna de texto -->
+			<div class="animate-rise">
+				<div class="flex items-center gap-3">
+					<img
+						src="/images/perfil-dev.jpg"
+						alt={SITE.name}
+						width="56"
+						height="56"
+						loading="eager"
+						fetchpriority="high"
+						class="h-14 w-14 rounded-full border border-border object-cover"
+					/>
+					<span
+						class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted"
+					>
+						<span class="relative flex h-2 w-2">
+							<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60"></span>
+							<span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+						</span>
+						{ui.hero.available}
+					</span>
+				</div>
+
+				<h1 class="mt-7 text-[2.6rem] font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+					Fabián<br /><span class="text-muted">Fernández Gálvez</span>
+				</h1>
+
+				<p class="mt-4 font-mono text-sm text-accent">{ui.hero.role}</p>
+
+				<p class="mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
+					{ui.hero.tagline}
+				</p>
+
+				<div class="mt-9 flex flex-wrap items-center gap-3">
+					<a
+						href={`${base}#work`}
+						class="group inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-medium text-white transition-all hover:brightness-110 hover:shadow-lg hover:shadow-accent/25"
+					>
+						{ui.hero.ctaWork}
+						<svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M5 12h14M13 6l6 6-6 6"></path>
+						</svg>
+					</a>
+					<a
+						href={`${base}#contact`}
+						class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-text transition-colors hover:border-accent"
+					>
+						{ui.hero.ctaContact}
+					</a>
+				</div>
+			</div>
+
+			<!-- terminal -->
+			<div class="animate-rise [animation-delay:120ms]">
+				<Terminal client:load user="fabian" host="buildbyfabi" lines={lines} />
+			</div>
+		</div>
+	</div>
+</section>

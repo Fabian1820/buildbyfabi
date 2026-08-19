@@ -1,0 +1,124 @@
+---
+import '../styles/global.css';
+import { SITE } from '../data/site';
+import { getLocale, t, localePath, type Locale } from '../i18n/ui';
+import Nav from '../components/sections/Nav.astro';
+import Footer from '../components/sections/Footer.astro';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const locale: Locale = getLocale(Astro.url);
+const ui = t(locale);
+const { title, description } = Astro.props;
+
+const pageTitle = title ?? `${SITE.shortName} — ${ui.hero.role}`;
+const pageDesc = description ?? ui.hero.tagline;
+const canonical = new URL(Astro.url.pathname, SITE.url).href;
+const ogImage = new URL('/og.png', SITE.url).href;
+
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'Person',
+	name: SITE.name,
+	alternateName: SITE.handle,
+	url: SITE.url,
+	image: new URL('/images/perfil.jpg', SITE.url).href,
+	email: `mailto:${SITE.email}`,
+	jobTitle: locale === 'es' ? 'Desarrollador de Software Full-Stack' : 'Full-Stack Software Developer',
+	address: {
+		'@type': 'PostalAddress',
+		addressLocality: 'Havana',
+		addressCountry: 'CU',
+	},
+	alumniOf: {
+		'@type': 'CollegeOrUniversity',
+		name: 'Universidad Tecnológica de La Habana José Antonio Echeverría (CUJAE)',
+	},
+	knowsAbout: ['React', 'Next.js', 'TypeScript', 'Python', 'FastAPI', 'MongoDB', 'Astro'],
+	sameAs: [SITE.github, SITE.instagram],
+};
+---
+
+<!doctype html>
+<html lang={locale} class="scroll-pt-24">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+
+		<title>{pageTitle}</title>
+		<meta name="description" content={pageDesc} />
+		<link rel="canonical" href={canonical} />
+
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="sitemap" href="/sitemap-index.xml" />
+
+		<link rel="alternate" hreflang="es" href={new URL(localePath('es', '/'), SITE.url).href} />
+		<link rel="alternate" hreflang="en" href={new URL(localePath('en', '/'), SITE.url).href} />
+		<link rel="alternate" hreflang="x-default" href={SITE.url} />
+
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content={SITE.domain} />
+		<meta property="og:locale" content={locale === 'es' ? 'es_ES' : 'en_US'} />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={pageDesc} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content={ogImage} />
+
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={pageTitle} />
+		<meta name="twitter:description" content={pageDesc} />
+		<meta name="twitter:image" content={ogImage} />
+
+		<meta name="theme-color" content="#0a0d14" media="(prefers-color-scheme: dark)" />
+		<meta name="theme-color" content="#f7f5f1" media="(prefers-color-scheme: light)" />
+
+		<script is:inline set:html={JSON.stringify(jsonLd)} type="application/ld+json" />
+
+		{/* Evita el flash de tema incorrecto: corre antes del primer paint */}
+		<script is:inline>
+			(() => {
+				const stored = localStorage.getItem('theme');
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const dark = stored ? stored === 'dark' : prefersDark;
+				document.documentElement.classList.toggle('dark', dark);
+			})();
+		</script>
+	</head>
+
+	<body class="min-h-screen bg-bg text-text">
+		<a
+			href="#main"
+			class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-white"
+		>
+			{locale === 'es' ? 'Saltar al contenido' : 'Skip to content'}
+		</a>
+
+		<Nav />
+		<main id="main">
+			<slot />
+		</main>
+		<Footer />
+
+		<script is:inline>
+			console.log(
+				`%c
+   ┌────────────────────────────────┐
+   │   buildbyfabi.dev              │
+   │   Fabián Fernández Gálvez      │
+   └────────────────────────────────┘
+
+   Curioso, ¿eh? Me gusta eso.
+   Si llegaste hasta aquí, probablemente
+   deberíamos trabajar juntos.
+
+   → fernandezfabian2003@gmail.com
+`,
+				'color:#8b5cf6;font-family:monospace;font-size:12px;line-height:1.5'
+			);
+		</script>
+	</body>
+</html>

@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# assets fuente (originales sin optimizar)
+design-inputs/

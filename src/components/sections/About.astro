@@ -1,0 +1,134 @@
+---
+import { getLocale, t, age, type Locale } from '../../i18n/ui';
+import { SITE, CREDENTIALS } from '../../data/site';
+import SectionHeading from '../ui/SectionHeading.astro';
+
+const locale: Locale = getLocale(Astro.url);
+const ui = t(locale);
+const years = age(SITE.birthDate);
+
+const facts = [
+	{ k: locale === 'es' ? 'Edad' : 'Age', v: `${years} ${ui.about.age}` },
+	{ k: ui.about.basedIn, v: SITE.location[locale] },
+	{ k: locale === 'es' ? 'Modalidad' : 'Setup', v: locale === 'es' ? 'Freelance · Remoto' : 'Freelance · Remote' },
+	{ k: locale === 'es' ? 'Idiomas' : 'Languages', v: locale === 'es' ? 'Español · Inglés (A2)' : 'Spanish · English (A2)' },
+];
+---
+
+<section id="about" class="scroll-mt-24 border-t border-border">
+	<div class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+		<SectionHeading eyebrow={ui.about.eyebrow} title={ui.about.title} />
+
+		<div class="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-16">
+			<div class="space-y-5 text-base leading-relaxed text-muted">
+				<p>{ui.about.p1}</p>
+				<p>{ui.about.p2}</p>
+				<p>{ui.about.p3}</p>
+			</div>
+
+			<div class="space-y-8">
+				<img
+					src="/images/perfil.jpg"
+					alt={SITE.name}
+					width="360"
+					height="360"
+					loading="lazy"
+					class="mx-auto h-44 w-44 rounded-full border border-border object-cover sm:h-52 sm:w-52"
+				/>
+
+				<dl class="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border">
+					{
+						facts.map((f) => (
+							<div class="bg-card px-4 py-3.5">
+								<dt class="font-mono text-[11px] uppercase tracking-wider text-faint">{f.k}</dt>
+								<dd class="mt-1 text-sm text-text">{f.v}</dd>
+							</div>
+						))
+					}
+				</dl>
+
+				<div>
+					<h3 class="font-mono text-[11px] uppercase tracking-wider text-faint">
+						{ui.about.credentials}
+					</h3>
+					<div class="mt-3 space-y-2">
+						{
+							CREDENTIALS.map((c) => (
+								<button
+									type="button"
+									data-credential={c.slug}
+									class="group flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left transition-colors hover:border-accent"
+								>
+									<svg class="h-4 w-4 shrink-0 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+										<path d="M12 2 3 6l9 4 9-4-9-4Z" />
+										<path d="M3 12l9 4 9-4M3 18l9 4 9-4" />
+									</svg>
+									<span class="min-w-0 flex-1">
+										<span class="block truncate text-sm text-text">{c.title[locale]}</span>
+										<span class="block truncate text-xs text-faint">
+											{c.issuer[locale]} · {c.year}
+										</span>
+									</span>
+									<svg class="h-4 w-4 shrink-0 text-faint transition-colors group-hover:text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+										<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+									</svg>
+								</button>
+							))
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{
+		CREDENTIALS.map((c) => (
+			<dialog
+				id={`dlg-${c.slug}`}
+				class="m-auto w-[min(92vw,900px)] rounded-2xl border border-border bg-card p-0 backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+			>
+				<div class="flex items-center justify-between border-b border-border px-5 py-3">
+					<div class="min-w-0">
+						<p class="truncate text-sm text-text">{c.title[locale]}</p>
+						<p class="truncate text-xs text-faint">{c.issuer[locale]}</p>
+					</div>
+					<button
+						type="button"
+						data-close={c.slug}
+						aria-label={ui.about.closeCredential}
+						class="ml-4 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border text-muted transition-colors hover:border-accent hover:text-text"
+					>
+						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+							<path d="M18 6 6 18M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
+				<img src={c.image} alt={c.title[locale]} class="max-h-[75vh] w-full bg-bg-subtle object-contain" />
+			</dialog>
+		))
+	}
+</section>
+
+<script>
+	document.querySelectorAll<HTMLButtonElement>('[data-credential]').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const dlg = document.getElementById(
+				`dlg-${btn.dataset.credential}`
+			) as HTMLDialogElement | null;
+			dlg?.showModal();
+		});
+	});
+
+	document.querySelectorAll<HTMLButtonElement>('[data-close]').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			(btn.closest('dialog') as HTMLDialogElement | null)?.close();
+		});
+	});
+
+	// clic en el backdrop cierra
+	document.querySelectorAll<HTMLDialogElement>('dialog').forEach((dlg) => {
+		dlg.addEventListener('click', (e) => {
+			if (e.target === dlg) dlg.close();
+		});
+	});
+</script>

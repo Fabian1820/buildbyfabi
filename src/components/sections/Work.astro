@@ -1,0 +1,26 @@
+---
+import { getLocale, t, type Locale } from '../../i18n/ui';
+import { PROJECTS } from '../../data/site';
+import SectionHeading from '../ui/SectionHeading.astro';
+import ProjectCard from '../ui/ProjectCard.astro';
+
+const locale: Locale = getLocale(Astro.url);
+const ui = t(locale);
+
+const featured = PROJECTS.filter((p) => p.featured);
+const rest = PROJECTS.filter((p) => !p.featured);
+---
+
+<section id="work" class="scroll-mt-24 border-t border-border">
+	<div class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+		<SectionHeading eyebrow={ui.work.eyebrow} title={ui.work.title} subtitle={ui.work.subtitle} />
+
+		<div class="mt-12 grid gap-5 lg:grid-cols-2">
+			{featured.map((p) => <ProjectCard project={p} size="lg" />)}
+		</div>
+
+		<div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+			{rest.map((p) => <ProjectCard project={p} size="sm" />)}
+		</div>
+	</div>
+</section>
