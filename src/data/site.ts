@@ -12,7 +12,8 @@ export const SITE = {
 	instagram: 'https://www.instagram.com/bian0311/',
 	whatsapp: 'https://wa.me/5358412294',
 	whatsappDisplay: '+53 5841 2294',
-	cv: { es: '/cv/Fabian-Fernandez-CV-ES.pdf', en: '/cv/Fabian-Fernandez-CV-EN.pdf' },
+	suncarInstagram: 'https://www.instagram.com/suncar.srl/',
+	cv: { es: '/cv/Fabian-Fernandez-CV.pdf', en: '/cv/Fabian-Fernandez-CV-EN.pdf' },
 } as const;
 
 export type Project = {
@@ -32,21 +33,22 @@ export const PROJECTS: Project[] = [
 	{
 		slug: 'suncar',
 		featured: true,
-		year: '2025 — 2026',
+		year: '2025 — hoy',
 		status: 'live',
+		image: '/images/projects/suncar.jpg',
 		stack: ['Next.js', 'React', 'TypeScript', 'FastAPI', 'MongoDB', 'Tailwind CSS'],
 		links: {
-			live: 'https://v0-solar-panel-admin-system.vercel.app',
+			live: 'https://suncarsrl.com',
 			repo: 'https://github.com/Fabian1820/SunCarWeb',
 		},
-		title: { es: 'SunCar · Sistema de gestión', en: 'SunCar · Management System' },
+		title: { es: 'SunCar', en: 'SunCar' },
 		tagline: {
-			es: 'ERP a medida para una empresa de energía fotovoltaica',
-			en: 'Custom ERP for a photovoltaic energy company',
+			es: 'Sitio corporativo y sistema interno de una empresa de energía solar',
+			en: 'Corporate site and internal system for a solar energy company',
 		},
 		description: {
-			es: 'Sistema administrativo completo para una empresa de instalación de paneles solares: gestión de brigadas y servicios, control de materiales con kardex, fichas de costo y contabilidad. Genera reportes en PDF y Excel, integra mapas para ubicar instalaciones y funciona como PWA para usarse en campo sin conexión estable.',
-			en: 'End-to-end admin system for a solar panel installation company: crew and service management, material control with kardex, cost sheets and accounting. It generates PDF and Excel reports, integrates maps to locate installations, and ships as a PWA so it works in the field without a stable connection.',
+			es: 'Desarrollo el software de SunCar, empresa de instalación de paneles solares. Construí su sitio corporativo en Next.js y lidero parte del sistema interno de gestión: brigadas y servicios, control de materiales con kardex, fichas de costo y contabilidad, con reportes en PDF y Excel y soporte offline para el trabajo en campo.',
+			en: 'I build the software at SunCar, a solar panel installation company. I developed their corporate site in Next.js and lead part of the internal management system: crews and services, material control with kardex, cost sheets and accounting, with PDF and Excel reports and offline support for fieldwork.',
 		},
 	},
 	{
@@ -66,6 +68,22 @@ export const PROJECTS: Project[] = [
 		},
 	},
 	{
+		slug: 'llego',
+		year: '2026',
+		status: 'live',
+		stack: ['Astro', 'Svelte', 'TypeScript', 'Kotlin'],
+		links: { live: 'https://llegoweb-production.up.railway.app' },
+		title: { es: 'Llegó', en: 'Llegó' },
+		tagline: {
+			es: 'Plataforma de compra asistida por IA',
+			en: 'AI-assisted shopping platform',
+		},
+		description: {
+			es: 'Plataforma de compra inteligente para restaurantes, ropa y mercado, con recomendación asistida por IA. Sitio construido con Astro e islas de Svelte; el proyecto incluye además una app Android nativa en Kotlin para el lado comercial.',
+			en: 'Smart shopping platform for restaurants, clothing and groceries, with AI-assisted recommendations. The site is built with Astro and Svelte islands; the project also includes a native Android app in Kotlin for the merchant side.',
+		},
+	},
+	{
 		slug: 'trimio',
 		year: '2026',
 		status: 'wip',
@@ -81,50 +99,22 @@ export const PROJECTS: Project[] = [
 		},
 	},
 	{
-		slug: 'cachito',
-		year: '2026',
-		status: 'wip',
-		stack: ['Swift', 'SwiftUI', 'SwiftData', 'CloudKit'],
-		title: { es: 'Cachito', en: 'Cachito' },
-		tagline: {
-			es: 'App iOS de memoria personal',
-			en: 'Personal memory app for iOS',
-		},
-		description: {
-			es: 'App nativa de iOS para recordar lo que se olvida: tareas, lugares y fechas importantes. Construida con SwiftUI y SwiftData, sincroniza entre dispositivos vía CloudKit sin backend propio ni cuentas de usuario.',
-			en: 'Native iOS app for the things you forget: tasks, places and important dates. Built with SwiftUI and SwiftData, it syncs across devices through CloudKit with no backend of its own and no user accounts.',
-		},
-	},
-	{
-		slug: 'llego-business',
-		year: '2026',
-		status: 'private',
-		stack: ['Kotlin', 'Android'],
-		links: { repo: 'https://github.com/Fabian1820/LlegoBusiness' },
-		title: { es: 'Llego Business', en: 'Llego Business' },
-		tagline: {
-			es: 'App Android nativa para comercios',
-			en: 'Native Android app for merchants',
-		},
-		description: {
-			es: 'Aplicación Android nativa en Kotlin para el lado comercial de Llego: gestión de catálogo, pedidos y estado del negocio desde el móvil.',
-			en: 'Native Android app in Kotlin for the merchant side of Llego: catalogue, orders and business status management from the phone.',
-		},
-	},
-	{
 		slug: 'shellbox',
 		year: '2025',
-		status: 'archived',
-		stack: ['Svelte', 'Astro', 'TypeScript'],
-		links: { repo: 'https://github.com/Fabian1820/ShellBoxLandingPage' },
-		title: { es: 'ShellBox · Sitio de agencia', en: 'ShellBox · Agency Site' },
+		status: 'live',
+		stack: ['Astro', 'Svelte', 'TypeScript'],
+		links: {
+			live: 'https://shellbox.up.railway.app',
+			repo: 'https://github.com/Fabian1820/ShellBoxLandingPage',
+		},
+		title: { es: 'ShellBox Encargos', en: 'ShellBox Encargos' },
 		tagline: {
-			es: 'Landing corporativa con Svelte + Astro',
-			en: 'Corporate landing with Svelte + Astro',
+			es: 'Sitio de un servicio de encargos a domicilio',
+			en: 'Site for a home delivery service',
 		},
 		description: {
-			es: 'Sitio oficial de la agencia ShellBox. Construido con Astro y componentes Svelte para mantener el HTML estático y enviar JavaScript solo donde hacía falta interactividad.',
-			en: 'Official site for the ShellBox agency. Built with Astro and Svelte components to keep the HTML static and ship JavaScript only where interactivity was actually needed.',
+			es: 'Sitio oficial de ShellBox, servicio de encargos a domicilio. Construido con Astro y componentes Svelte para mantener el HTML estático y enviar JavaScript solo donde hacía falta interactividad real.',
+			en: 'Official site for ShellBox, a home delivery service. Built with Astro and Svelte components to keep the HTML static and ship JavaScript only where real interactivity was needed.',
 		},
 	},
 	{
@@ -139,37 +129,69 @@ export const PROJECTS: Project[] = [
 			en: 'Self-organizing map classifier',
 		},
 		description: {
-			es: 'Proyecto académico de redes neuronales: clasificación del dataset Iris mediante un mapa autoorganizado (SOM), implementado desde cero para entender el algoritmo por dentro.',
-			en: 'Academic neural-network project: classifying the Iris dataset with a self-organizing map (SOM), implemented from scratch to understand the algorithm from the inside.',
+			es: 'Proyecto universitario de redes neuronales: clasificación del dataset Iris mediante un mapa autoorganizado (SOM), implementado desde cero en equipo para entender el algoritmo por dentro.',
+			en: 'University neural-network project: classifying the Iris dataset with a self-organizing map (SOM), implemented from scratch as a team to understand the algorithm from the inside.',
 		},
 	},
 ];
 
-export const STACK = [
+export type TechItem = { name: string; icon: string };
+
+export const STACK: {
+	key: string;
+	label: { es: string; en: string };
+	items: TechItem[];
+}[] = [
 	{
 		key: 'frontend',
 		label: { es: 'Frontend', en: 'Frontend' },
-		items: ['React', 'Next.js', 'Astro', 'Svelte', 'TypeScript', 'Tailwind CSS', 'shadcn/ui'],
+		items: [
+			{ name: 'React', icon: 'react' },
+			{ name: 'Next.js', icon: 'nextdotjs' },
+			{ name: 'Astro', icon: 'astro' },
+			{ name: 'Svelte', icon: 'svelte' },
+			{ name: 'Nuxt', icon: 'nuxt' },
+			{ name: 'TypeScript', icon: 'typescript' },
+			{ name: 'Tailwind CSS', icon: 'tailwindcss' },
+			{ name: 'shadcn/ui', icon: 'shadcnui' },
+		],
 	},
 	{
 		key: 'backend',
 		label: { es: 'Backend', en: 'Backend' },
-		items: ['Python', 'FastAPI', 'REST APIs', 'Node.js'],
+		items: [
+			{ name: 'Python', icon: 'python' },
+			{ name: 'FastAPI', icon: 'fastapi' },
+			{ name: 'Node.js', icon: 'nodedotjs' },
+		],
 	},
 	{
 		key: 'data',
 		label: { es: 'Datos', en: 'Data' },
-		items: ['MongoDB', 'SwiftData', 'Pandas'],
+		items: [
+			{ name: 'MongoDB', icon: 'mongodb' },
+			{ name: 'pandas', icon: 'pandas' },
+		],
 	},
 	{
 		key: 'mobile',
 		label: { es: 'Móvil', en: 'Mobile' },
-		items: ['Kotlin', 'Swift', 'SwiftUI'],
+		items: [
+			{ name: 'Kotlin', icon: 'kotlin' },
+			{ name: 'Swift', icon: 'swift' },
+		],
 	},
 	{
 		key: 'tools',
 		label: { es: 'Herramientas', en: 'Tooling' },
-		items: ['Git', 'Docker', 'Vercel', 'Railway', 'Figma'],
+		items: [
+			{ name: 'Git', icon: 'git' },
+			{ name: 'Docker', icon: 'docker' },
+			{ name: 'Claude Code', icon: 'claude' },
+			{ name: 'Vercel', icon: 'vercel' },
+			{ name: 'Railway', icon: 'railway' },
+			{ name: 'Figma', icon: 'figma' },
+		],
 	},
 ];
 

@@ -7,32 +7,27 @@ export const UI = {
 		nav: { about: 'Sobre mí', stack: 'Stack', work: 'Proyectos', contact: 'Contacto' },
 		hero: {
 			role: 'Ingeniero Informático · Desarrollador Full-Stack',
-			tagline: 'Construyo software web de extremo a extremo — del modelo de datos al último pixel.',
+			tagline: 'Construyo software de extremo a extremo — del modelo de datos al último pixel.',
 			available: 'Disponible para proyectos freelance',
-			ctaWork: 'Ver proyectos',
+			ctaCv: 'Descargar CV',
 			ctaContact: 'Hablemos',
-			scroll: 'Desliza',
-		},
-		terminal: {
-			bio: 'Ingeniero informático. Construyo sistemas que la gente usa todos los días.',
-			role: 'Freelance · Remoto',
 		},
 		about: {
 			eyebrow: 'Sobre mí',
-			title: 'Software que se usa, no que se demuestra',
-			p1: 'Soy ingeniero informático, graduado de la CUJAE en 2026. Llevo el último año construyendo sistemas de gestión reales para empresas: el tipo de software que alguien abre cada mañana para trabajar, no demos que se ven bien en una captura de pantalla.',
-			p2: 'Mi terreno es React y Next.js en el frontend, FastAPI y MongoDB en el backend. Me interesa sobre todo la parte que nadie ve: modelar bien los datos, automatizar el proceso que hoy se hace a mano en una hoja de cálculo, y dejar el código en un estado donde el siguiente cambio sea fácil.',
-			p3: 'Mi tesis fue un gemelo digital web para monitorear y predecir el comportamiento de una microrred fotovoltaica, diseñado con reglas configurables para integrarse con distintas APIs. Ahora trabajo como freelance en remoto, y me interesan proyectos donde pueda acompañar el producto de principio a fin.',
+			title: 'De la CUJAE a producción',
+			p1: 'Soy ingeniero informático, graduado de la CUJAE en julio de 2026. Mi tesis fue un gemelo digital web para gestionar, predecir y monitorear una microrred fotovoltaica: en lugar de resolverlo para una sola instalación, lo diseñé alrededor de un conjunto de reglas configurables, de modo que pudiera integrarse con distintas APIs y adaptarse a escenarios reales muy diferentes entre sí.',
+			p2html:
+				'Desde hace un año trabajo en <a href="__SUNCAR__" target="_blank" rel="noopener noreferrer" class="font-medium text-accent underline decoration-accent/30 underline-offset-4 transition-colors hover:decoration-accent">SunCar</a> como desarrollador y uno de los líderes del equipo, construyendo tanto su sitio corporativo como el sistema interno con el que la empresa opera cada día. Además trabajo como freelance en remoto: me interesan los proyectos donde pueda acompañar el producto de principio a fin, o sumarme en marcha y aportar justo donde el equipo necesita empuje para seguir avanzando.',
+			p3: 'Mi terreno es React y Next.js en el frontend, FastAPI y MongoDB en el backend, y Claude Code como parte natural del flujo — creo que el desarrollo asistido por IA, bien usado, eleva el nivel del trabajo en vez de reemplazarlo. Más allá del stack, lo que más disfruto es levantar requisitos con el cliente, modelar la arquitectura antes de escribir la primera línea, romper mis propias implementaciones buscando por dónde fallan y cuidar la seguridad desde el diseño. Y trabajo mejor acompañado: prefiero discutir una decisión técnica con el equipo que acertarla solo.',
 			age: 'años',
 			basedIn: 'Desde',
 			credentials: 'Credenciales',
-			viewCredential: 'Ver documento',
 			closeCredential: 'Cerrar',
 		},
 		stack: {
 			eyebrow: 'Stack',
 			title: 'Con lo que trabajo',
-			subtitle: 'Lo que más uso en proyectos reales, no una lista de todo lo que he tocado alguna vez.',
+			subtitle: 'Lo que uso en proyectos reales, no una lista de todo lo que he tocado alguna vez.',
 		},
 		work: {
 			eyebrow: 'Proyectos',
@@ -45,19 +40,16 @@ export const UI = {
 		contact: {
 			eyebrow: 'Contacto',
 			title: '¿Tienes algo en mente?',
-			subtitle: 'Cuéntame qué necesitas construir. Respondo en menos de 24 horas.',
+			subtitle: 'Cuéntame tu idea o lo que necesitas resolver, y vemos juntos cómo llevarlo adelante.',
 			emailLabel: 'Escríbeme',
 			whatsappLabel: 'WhatsApp',
 			githubLabel: 'GitHub',
 			instagramLabel: 'Instagram',
-			downloadCv: 'Descargar CV',
 			copy: 'Copiar',
-			copied: 'Copiado',
 		},
 		footer: {
 			built: 'Construido con',
 			rights: 'Todos los derechos reservados.',
-			source: 'Código de este sitio',
 		},
 		theme: { toggle: 'Cambiar tema' },
 		lang: { toggle: 'Cambiar idioma' },
@@ -71,32 +63,27 @@ export const UI = {
 		nav: { about: 'About', stack: 'Stack', work: 'Work', contact: 'Contact' },
 		hero: {
 			role: 'Software Engineer · Full-Stack Developer',
-			tagline: 'I build end-to-end web software — from the data model to the last pixel.',
+			tagline: 'I build software end to end — from the data model to the last pixel.',
 			available: 'Available for freelance work',
-			ctaWork: 'See my work',
+			ctaCv: 'Download CV',
 			ctaContact: 'Get in touch',
-			scroll: 'Scroll',
-		},
-		terminal: {
-			bio: 'Software engineer. I build systems people use every single day.',
-			role: 'Freelance · Remote',
 		},
 		about: {
 			eyebrow: 'About',
-			title: 'Software that gets used, not just demoed',
-			p1: "I'm a software engineer, graduated from CUJAE in 2026. I've spent the past year building real management systems for companies — the kind of software someone opens every morning to do their job, not demos that look good in a screenshot.",
-			p2: 'My ground is React and Next.js on the frontend, FastAPI and MongoDB on the backend. What interests me most is the part nobody sees: modelling the data properly, automating the process that today lives in a spreadsheet, and leaving the code in a state where the next change is easy.',
-			p3: 'My thesis was a web digital twin to monitor and forecast the behaviour of a photovoltaic microgrid, designed around configurable rules so it could integrate with different APIs. I now work as a remote freelancer, and I look for projects where I can follow the product from start to finish.',
+			title: 'From CUJAE to production',
+			p1: 'I am a software engineer, graduated from CUJAE in July 2026. My thesis was a web digital twin to manage, forecast and monitor a photovoltaic microgrid: instead of solving it for a single installation, I designed it around a configurable rule set so it could integrate with different APIs and adapt to very different real-world scenarios.',
+			p2html:
+				'For the past year I have been working at <a href="__SUNCAR__" target="_blank" rel="noopener noreferrer" class="font-medium text-accent underline decoration-accent/30 underline-offset-4 transition-colors hover:decoration-accent">SunCar</a> as a developer and one of the team leads, building both their corporate site and the internal system the company runs on every day. I also work as a remote freelancer: I am drawn to projects where I can follow the product from start to finish, or join one already in motion and push exactly where the team needs momentum.',
+			p3: 'My ground is React and Next.js on the frontend, FastAPI and MongoDB on the backend, and Claude Code as a natural part of the workflow — I believe AI-assisted development, used well, raises the bar of the work rather than replacing it. Beyond the stack, what I enjoy most is gathering requirements with the client, modelling the architecture before writing the first line, breaking my own implementations to find where they fail, and building security in from the design stage. And I work better with company: I would rather debate a technical decision with the team than get it right alone.',
 			age: 'years old',
 			basedIn: 'Based in',
 			credentials: 'Credentials',
-			viewCredential: 'View document',
 			closeCredential: 'Close',
 		},
 		stack: {
 			eyebrow: 'Stack',
 			title: 'What I work with',
-			subtitle: "What I actually reach for on real projects — not a list of everything I've ever touched.",
+			subtitle: "What I use on real projects — not a list of everything I've ever touched.",
 		},
 		work: {
 			eyebrow: 'Work',
@@ -109,19 +96,16 @@ export const UI = {
 		contact: {
 			eyebrow: 'Contact',
 			title: 'Got something in mind?',
-			subtitle: 'Tell me what you need to build. I reply within 24 hours.',
+			subtitle: "Tell me your idea or what you need to solve, and let's work out how to move it forward.",
 			emailLabel: 'Email me',
 			whatsappLabel: 'WhatsApp',
 			githubLabel: 'GitHub',
 			instagramLabel: 'Instagram',
-			downloadCv: 'Download CV',
 			copy: 'Copy',
-			copied: 'Copied',
 		},
 		footer: {
 			built: 'Built with',
 			rights: 'All rights reserved.',
-			source: 'Source of this site',
 		},
 		theme: { toggle: 'Toggle theme' },
 		lang: { toggle: 'Switch language' },
@@ -132,6 +116,24 @@ export const UI = {
 		},
 	},
 } as const;
+
+/** Secuencia del terminal del hero: guiños de cultura dev, no un resumen del CV. */
+export const TERMINAL: Record<Locale, { cmd: string; out: string; tone?: 'accent' | 'muted' }[]> = {
+	es: [
+		{ cmd: 'sudo make me a sandwich', out: 'Okay.' },
+		{ cmd: 'rm -rf node_modules && npm i', out: 'Ritual completado. El bug sigue ahí.', tone: 'muted' },
+		{ cmd: 'git log --oneline -1', out: 'a1b2c3d  fix: ahora sí, esta vez de verdad', tone: 'muted' },
+		{ cmd: ':wq', out: 'Saliste de vim a la primera. Nadie te va a creer.', tone: 'muted' },
+		{ cmd: 'echo $STATUS', out: '● Disponible para proyectos freelance', tone: 'accent' },
+	],
+	en: [
+		{ cmd: 'sudo make me a sandwich', out: 'Okay.' },
+		{ cmd: 'rm -rf node_modules && npm i', out: 'Ritual complete. The bug is still there.', tone: 'muted' },
+		{ cmd: 'git log --oneline -1', out: 'a1b2c3d  fix: it works now, for real this time', tone: 'muted' },
+		{ cmd: ':wq', out: 'You exited vim on the first try. Nobody will believe you.', tone: 'muted' },
+		{ cmd: 'echo $STATUS', out: '● Available for freelance work', tone: 'accent' },
+	],
+};
 
 export function getLocale(url: URL): Locale {
 	const seg = url.pathname.split('/').filter(Boolean)[0];

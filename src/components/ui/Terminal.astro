@@ -1,0 +1,109 @@
+---
+export type TerminalStep = { cmd: string; out: string; tone?: 'accent' | 'muted' };
+
+interface Props {
+	user: string;
+	host: string;
+	steps: TerminalStep[];
+}
+
+const { user, host, steps } = Astro.props;
+
+const toneClass = (tone?: string) =>
+	tone === 'accent' ? 'text-accent' : tone === 'muted' ? 'text-faint' : 'text-muted';
+---
+
+<div
+	class="w-full overflow-hidden rounded-xl border border-border bg-card shadow-2xl shadow-black/5 dark:shadow-black/40"
+>
+	<div class="flex items-center gap-3 border-b border-border bg-bg-subtle px-4 py-2.5">
+		<div class="flex gap-1.5" aria-hidden="true">
+			<span class="h-2.5 w-2.5 rounded-full bg-[#ff5f57]"></span>
+			<span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]"></span>
+			<span class="h-2.5 w-2.5 rounded-full bg-[#28c840]"></span>
+		</div>
+		<span class="flex-1 truncate text-center font-mono text-[11px] text-faint">
+			{user}@{host} — zsh
+		</span>
+		<div class="w-[42px]" aria-hidden="true"></div>
+	</div>
+
+	<div
+		id="term"
+		class="min-h-[300px] px-4 py-4 font-mono text-[12.5px] leading-relaxed sm:min-h-[320px] sm:text-[13px]"
+	>
+		{
+			steps.map((step, i) => (
+				<>
+					<p class="term-line flex flex-wrap items-baseline gap-x-2" data-kind="cmd">
+						<span class="shrink-0 select-none">
+							<span class="text-accent">{user}</span><span class="text-faint">@</span><span class="text-muted">{host}</span><span class="text-faint"> ~ </span><span class="text-accent">$</span>
+						</span>
+						<span class="term-txt text-text" data-text={step.cmd}>{step.cmd}</span>
+					</p>
+					<p class:list={['term-line', toneClass(step.tone)]} data-kind="out">
+						{step.out}
+					</p>
+					{i < steps.length - 1 && <div class="term-line h-3" data-kind="blank" />}
+				</>
+			))
+		}
+		<p class="term-line term-final flex flex-wrap items-baseline gap-x-2" data-kind="final">
+			<span class="shrink-0 select-none">
+				<span class="text-accent">{user}</span><span class="text-faint">@</span><span class="text-muted">{host}</span><span class="text-faint"> ~ </span><span class="text-accent">$</span>
+			</span>
+			<span class="term-caret inline-block h-[1em] w-[7px] translate-y-[2px] bg-accent animate-blink" aria-hidden="true"></span>
+		</p>
+	</div>
+</div>
+
+<script>
+	const TYPE = 20;
+	const AFTER_CMD = 190;
+	const AFTER_OUT = 110;
+	const START = 240;
+
+	const term = document.getElementById('term');
+	if (term) {
+		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const lines = Array.from(term.querySelectorAll<HTMLElement>('.term-line'));
+
+		if (!reduced && lines.length) {
+			// Punto de partida: todo oculto salvo el cursor final, que viaja con la escritura.
+			lines.forEach((l) => (l.style.display = 'none'));
+			term.querySelectorAll<HTMLElement>('.term-txt').forEach((s) => (s.textContent = ''));
+
+			const caretLine = term.querySelector<HTMLElement>('.term-final');
+			const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+			const run = async () => {
+				await wait(START);
+				for (const line of lines) {
+					const kind = line.dataset.kind;
+					if (kind === 'final') break;
+
+					line.style.display = kind === 'blank' ? 'block' : 'flex';
+					if (kind === 'blank') line.style.display = 'block';
+
+					if (kind === 'cmd') {
+						const span = line.querySelector<HTMLElement>('.term-txt');
+						const text = span?.dataset.text ?? '';
+						span?.classList.add('typing');
+						for (let i = 1; i <= text.length; i++) {
+							if (span) span.textContent = text.slice(0, i);
+							await wait(TYPE);
+						}
+						await wait(AFTER_CMD);
+						span?.classList.remove('typing');
+					} else if (kind === 'out') {
+						line.style.display = 'block';
+						await wait(AFTER_OUT);
+					}
+				}
+				if (caretLine) caretLine.style.display = 'flex';
+			};
+
+			run();
+		}
+	}
+</script>

@@ -119,11 +119,26 @@ const statusTone: Record<string, string> = {
 </article>
 
 <script>
+	// Un solo rAF por frame: evita layout thrashing con el puntero encima.
 	document.querySelectorAll<HTMLElement>('.spotlight').forEach((card) => {
-		card.addEventListener('pointermove', (e) => {
-			const r = card.getBoundingClientRect();
-			card.style.setProperty('--mx', `${e.clientX - r.left}px`);
-			card.style.setProperty('--my', `${e.clientY - r.top}px`);
-		});
+		let queued = false;
+		let x = 0;
+		let y = 0;
+		card.addEventListener(
+			'pointermove',
+			(e) => {
+				x = e.clientX;
+				y = e.clientY;
+				if (queued) return;
+				queued = true;
+				requestAnimationFrame(() => {
+					const r = card.getBoundingClientRect();
+					card.style.setProperty('--mx', `${x - r.left}px`);
+					card.style.setProperty('--my', `${y - r.top}px`);
+					queued = false;
+				});
+			},
+			{ passive: true }
+		);
 	});
 </script>

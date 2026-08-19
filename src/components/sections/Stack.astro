@@ -1,4 +1,5 @@
 ---
+import * as si from 'simple-icons';
 import { getLocale, t, type Locale } from '../../i18n/ui';
 import { STACK } from '../../data/site';
 import SectionHeading from '../ui/SectionHeading.astro';
@@ -6,45 +7,78 @@ import SectionHeading from '../ui/SectionHeading.astro';
 const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
 
-const marquee = [
-	'React', 'Next.js', 'TypeScript', 'Astro', 'Tailwind CSS', 'Svelte',
-	'Python', 'FastAPI', 'MongoDB', 'Kotlin', 'Swift', 'Docker', 'Git',
-];
+type Icon = { title: string; hex: string; path: string };
+
+const iconFor = (slug: string): Icon | null => {
+	const key = 'si' + slug.charAt(0).toUpperCase() + slug.slice(1);
+	return ((si as unknown as Record<string, Icon>)[key]) ?? null;
+};
+
+/* Muchas marcas son negras (Next.js, Vercel, shadcn) o casi blancas.
+   Ajustamos la luminancia para que el color de marca se lea en ambos temas. */
+const rgb = (hex: string) => [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const lum = (hex: string) => {
+	const [r, g, b] = rgb(hex).map((v) => {
+		const s = v / 255;
+		return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+	});
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const mix = (hex: string, target: number[], amount: number) =>
+	'#' +
+	rgb(hex)
+		.map((v, i) => Math.round(v + (target[i] - v) * amount))
+		.map((v) => v.toString(16).padStart(2, '0'))
+		.join('');
+
+const brandFor = (hex: string) => {
+	const l = lum(hex);
+	return {
+		light: l > 0.72 ? mix(hex, [0, 0, 0], 0.45) : hex,
+		dark: l < 0.16 ? mix(hex, [255, 255, 255], 0.78) : l < 0.3 ? mix(hex, [255, 255, 255], 0.45) : hex,
+	};
+};
 ---
 
 <section id="stack" class="scroll-mt-24 border-t border-border bg-bg-subtle">
 	<div class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
 		<SectionHeading eyebrow={ui.stack.eyebrow} title={ui.stack.title} subtitle={ui.stack.subtitle} />
 
-		<div class="mt-12 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+		<div class="mt-12 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
 			{
 				STACK.map((group) => (
-					<div class="bg-card p-6">
+					<div class="grid gap-4 px-6 py-6 sm:grid-cols-[140px_minmax(0,1fr)] sm:items-center sm:gap-6 sm:px-8">
 						<h3 class="font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
 							{group.label[locale]}
 						</h3>
-						<ul class="mt-4 flex flex-wrap gap-2">
-							{group.items.map((item) => (
-								<li class="rounded-lg border border-border px-2.5 py-1 text-[13px] text-muted transition-colors hover:border-accent hover:text-text">
-									{item}
-								</li>
-							))}
-						</ul>
-					</div>
-				))
-			}
-		</div>
-	</div>
 
-	<!-- marquee -->
-	<div class="relative overflow-hidden border-t border-border py-6 mask-fade-x">
-		<div class="flex w-max animate-marquee gap-10 pr-10">
-			{
-				[0, 1].map(() => (
-					<div class="flex shrink-0 items-center gap-10" aria-hidden="true">
-						{marquee.map((m) => (
-							<span class="font-mono text-sm text-faint">{m}</span>
-						))}
+						<ul class="flex flex-wrap gap-2">
+							{group.items.map((item) => {
+								const icon = iconFor(item.icon);
+								const brand = icon ? brandFor(icon.hex) : null;
+								return (
+									<li
+										class="tech group flex items-center gap-2 rounded-xl border border-border bg-bg-subtle px-3 py-2 transition-colors hover:border-accent/60 hover:bg-card"
+										style={brand ? `--brand-light:${brand.light};--brand-dark:${brand.dark}` : undefined}
+									>
+										{icon && (
+											<svg
+												class="tech-logo h-[18px] w-[18px] shrink-0 text-faint transition-colors"
+												viewBox="0 0 24 24"
+												fill="currentColor"
+												role="img"
+												aria-hidden="true"
+											>
+												<path d={icon.path} />
+											</svg>
+										)}
+										<span class="text-[13px] text-muted transition-colors group-hover:text-text">
+											{item.name}
+										</span>
+									</li>
+								);
+							})}
+						</ul>
 					</div>
 				))
 			}

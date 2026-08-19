@@ -17,7 +17,7 @@ const links = [
 
 <header
 	id="site-nav"
-	class="fixed inset-x-0 top-0 z-50 transition-all duration-300"
+	class="fixed inset-x-0 top-0 z-50"
 	data-scrolled="false"
 >
 	<div
@@ -130,14 +130,16 @@ const links = [
 		})
 	);
 
-	// Fondo del nav al hacer scroll
+	// Fondo del nav al hacer scroll (el estilo vive en global.css vía data-scrolled)
 	const nav = document.getElementById('site-nav');
+	let ticking = false;
 	const onScroll = () => {
-		const scrolled = window.scrollY > 12;
-		nav?.classList.toggle('bg-bg/80', scrolled);
-		nav?.classList.toggle('backdrop-blur-xl', scrolled);
-		nav?.classList.toggle('border-b', scrolled);
-		nav?.classList.toggle('border-border', scrolled);
+		if (ticking) return;
+		ticking = true;
+		requestAnimationFrame(() => {
+			if (nav) nav.dataset.scrolled = String(window.scrollY > 12);
+			ticking = false;
+		});
 	};
 	onScroll();
 	window.addEventListener('scroll', onScroll, { passive: true });

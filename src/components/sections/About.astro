@@ -22,7 +22,7 @@ const facts = [
 		<div class="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-16">
 			<div class="space-y-5 text-base leading-relaxed text-muted">
 				<p>{ui.about.p1}</p>
-				<p>{ui.about.p2}</p>
+				<p set:html={ui.about.p2html.replace('__SUNCAR__', SITE.suncarInstagram)} />
 				<p>{ui.about.p3}</p>
 			</div>
 
