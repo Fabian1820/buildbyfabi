@@ -38,7 +38,7 @@ const channels = [
 <section id="contact" class="scroll-mt-24 border-t border-border bg-bg-subtle">
 	<div class="relative mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
 		<div
-			class="pointer-events-none absolute left-1/2 top-0 h-64 w-[700px] -translate-x-1/2 rounded-full bg-accent/10 blur-[110px]"
+			class="pointer-events-none absolute left-1/2 top-0 h-64 w-full max-w-[700px] -translate-x-1/2 rounded-full bg-accent/10 blur-[110px]"
 			aria-hidden="true"
 		>
 		</div>
@@ -53,7 +53,7 @@ const channels = [
 			<div class="mt-12 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
 				{
 					channels.map((c) => (
-						<div class="group relative flex items-center gap-4 bg-card px-5 py-5 transition-colors hover:bg-bg-subtle">
+						<div class="group relative flex min-w-0 items-center gap-4 bg-card px-5 py-5 transition-colors hover:bg-bg-subtle">
 							<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border text-accent">
 								{c.icon === 'mail' && (
 									<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

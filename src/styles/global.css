@@ -69,6 +69,10 @@
 html {
 	scroll-behavior: smooth;
 	color-scheme: light;
+	/* Red de seguridad: ningún adorno debe poder desplazar la página en horizontal.
+	   `clip` en vez de `hidden` para no crear un contenedor de scroll que rompa
+	   `position: sticky` ni el desplazamiento a anclas. */
+	overflow-x: clip;
 }
 
 html.dark {
