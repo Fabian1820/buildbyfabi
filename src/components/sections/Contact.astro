@@ -52,8 +52,8 @@ const channels = [
 
 			<div class="mt-12 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
 				{
-					channels.map((c) => (
-						<div class="group relative flex min-w-0 items-center gap-4 bg-card px-5 py-5 transition-colors hover:bg-bg-subtle">
+					channels.map((c, i) => (
+						<div data-reveal style={`--reveal-i:${i}`} class="group relative flex min-w-0 items-center gap-4 bg-card px-5 py-5 transition-colors hover:bg-bg-subtle">
 							<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border text-accent">
 								{c.icon === 'mail' && (
 									<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

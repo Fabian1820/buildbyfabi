@@ -90,6 +90,13 @@ const jsonLd = {
 				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 				const dark = stored ? stored === 'dark' : prefersDark;
 				document.documentElement.classList.toggle('dark', dark);
+
+				// Marca el documento antes de pintar para que lo revelable nazca
+				// oculto; quien pidió menos movimiento ve la página tal cual.
+				const quietud = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+				if (!quietud && 'IntersectionObserver' in window) {
+					document.documentElement.classList.add('js-reveal');
+				}
 			})();
 		</script>
 	</head>
@@ -107,6 +114,28 @@ const jsonLd = {
 			<slot />
 		</main>
 		<Footer />
+
+		<script>
+			// Cada bloque marcado aparece al entrar en pantalla, una sola vez.
+			const revelables = document.querySelectorAll<HTMLElement>('[data-reveal]');
+
+			if (document.documentElement.classList.contains('js-reveal') && revelables.length) {
+				const observador = new IntersectionObserver(
+					(entradas) => {
+						for (const entrada of entradas) {
+							if (!entrada.isIntersecting) continue;
+							entrada.target.classList.add('revelado');
+							observador.unobserve(entrada.target);
+						}
+					},
+					{ rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
+				);
+
+				revelables.forEach((el) => observador.observe(el));
+			} else {
+				revelables.forEach((el) => el.classList.add('revelado'));
+			}
+		</script>
 
 		<script is:inline>
 			console.log(

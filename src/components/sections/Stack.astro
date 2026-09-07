@@ -33,9 +33,16 @@ const mix = (hex: string, target: number[], amount: number) =>
 
 const brandFor = (hex: string) => {
 	const l = lum(hex);
+	// `hex` viene de simple-icons sin almohadilla: sin ella la variable CSS es
+	// inválida y el logo se queda gris al pasar el cursor.
 	return {
-		light: l > 0.72 ? mix(hex, [0, 0, 0], 0.45) : hex,
-		dark: l < 0.16 ? mix(hex, [255, 255, 255], 0.78) : l < 0.3 ? mix(hex, [255, 255, 255], 0.45) : hex,
+		light: l > 0.72 ? mix(hex, [0, 0, 0], 0.45) : `#${hex}`,
+		dark:
+			l < 0.16
+				? mix(hex, [255, 255, 255], 0.78)
+				: l < 0.3
+					? mix(hex, [255, 255, 255], 0.45)
+					: `#${hex}`,
 	};
 };
 ---
@@ -46,8 +53,8 @@ const brandFor = (hex: string) => {
 
 		<div class="mt-12 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
 			{
-				STACK.map((group) => (
-					<div class="grid gap-4 px-6 py-6 sm:grid-cols-[140px_minmax(0,1fr)] sm:items-center sm:gap-6 sm:px-8">
+				STACK.map((group, i) => (
+					<div data-reveal style={`--reveal-i:${i}`} class="grid gap-4 px-6 py-6 sm:grid-cols-[140px_minmax(0,1fr)] sm:items-center sm:gap-6 sm:px-8">
 						<h3 class="font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
 							{group.label[locale]}
 						</h3>
