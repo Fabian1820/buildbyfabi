@@ -1,3 +1,12 @@
+import type { ImageMetadata } from 'astro';
+
+import golazoImg from '../assets/projects/golazo.jpg';
+import llegoImg from '../assets/projects/llego.jpg';
+import panalSomImg from '../assets/projects/panal-som.png';
+import shellboxImg from '../assets/projects/shellbox.jpg';
+import suncarImg from '../assets/projects/suncar.jpg';
+import trimioImg from '../assets/projects/trimio.jpg';
+
 export const SITE = {
 	name: 'Fabián Fernández Gálvez',
 	shortName: 'Fabián Fernández',
@@ -20,8 +29,8 @@ export type Project = {
 	slug: string;
 	featured?: boolean;
 	year: string;
-	status?: 'live' | 'wip' | 'private' | 'archived';
-	image?: string;
+	status?: 'live' | 'wip' | 'oss' | 'private' | 'archived';
+	image?: ImageMetadata;
 	stack: string[];
 	links?: { live?: string; repo?: string };
 	title: { es: string; en: string };
@@ -35,7 +44,7 @@ export const PROJECTS: Project[] = [
 		featured: true,
 		year: '2025 — hoy',
 		status: 'live',
-		image: '/images/projects/suncar.jpg',
+		image: suncarImg,
 		stack: ['Next.js', 'React', 'TypeScript', 'FastAPI', 'MongoDB', 'Tailwind CSS'],
 		links: {
 			live: 'https://suncarsrl.com',
@@ -71,6 +80,7 @@ export const PROJECTS: Project[] = [
 		slug: 'llego',
 		year: '2026',
 		status: 'live',
+		image: llegoImg,
 		stack: ['Astro', 'Svelte', 'TypeScript', 'Kotlin'],
 		links: { live: 'https://llegoweb-production.up.railway.app' },
 		title: { es: 'Llegó', en: 'Llegó' },
@@ -87,50 +97,71 @@ export const PROJECTS: Project[] = [
 		slug: 'trimio',
 		year: '2026',
 		status: 'wip',
+		image: trimioImg,
 		stack: ['Nuxt', 'Vue', 'FastAPI', 'MongoDB'],
+		links: { live: 'https://trimio-frontend-production.up.railway.app' },
 		title: { es: 'Trimio', en: 'Trimio' },
 		tagline: {
 			es: 'SaaS de reservas para barberías',
 			en: 'Booking SaaS for barbershops',
 		},
 		description: {
-			es: 'Plataforma de reservas online para barberías: agenda por barbero, catálogo de servicios, gestión de clientes y panel de control para el negocio. Producto propio, en desarrollo activo.',
-			en: 'Online booking platform for barbershops: per-barber scheduling, service catalogue, client management and a business dashboard. My own product, in active development.',
+			es: 'Plataforma de reservas online para barberías: cada negocio tiene su página pública con su marca, sus servicios y sus horarios, y el barbero gestiona citas, equipo y galería desde su panel. Producto propio, con demo abierta y en desarrollo activo.',
+			en: 'Online booking platform for barbershops: each business gets a public page with its own brand, services and opening hours, while the barber manages appointments, staff and gallery from a dashboard. My own product, with an open demo and in active development.',
 		},
 	},
 	{
 		slug: 'shellbox',
-		year: '2025',
+		year: '2025 — hoy',
 		status: 'live',
-		stack: ['Astro', 'Svelte', 'TypeScript'],
+		image: shellboxImg,
+		stack: ['Astro', 'Svelte', 'TypeScript', 'MongoDB', 'S3'],
 		links: {
 			live: 'https://shellbox.up.railway.app',
 			repo: 'https://github.com/Fabian1820/ShellBoxLandingPage',
 		},
 		title: { es: 'ShellBox Encargos', en: 'ShellBox Encargos' },
 		tagline: {
-			es: 'Sitio de un servicio de encargos a domicilio',
-			en: 'Site for a home delivery service',
+			es: 'Encargos desde Estados Unidos hasta La Habana',
+			en: 'Parcel service from the United States to Havana',
 		},
 		description: {
-			es: 'Sitio oficial de ShellBox, servicio de encargos a domicilio. Construido con Astro y componentes Svelte para mantener el HTML estático y enviar JavaScript solo donde hacía falta interactividad real.',
-			en: 'Official site for ShellBox, a home delivery service. Built with Astro and Svelte components to keep the HTML static and ship JavaScript only where real interactivity was needed.',
+			es: 'Sitio y panel de ShellBox, agencia que compra en tiendas de Estados Unidos y lleva el pedido hasta Cuba. Astro con renderizado en servidor e islas de Svelte solo donde hace falta interactividad: catálogo de stock sobre MongoDB, panel de administración con sesión por JWT y subida de fotos a S3, y todas las tarifas centralizadas en un único archivo de configuración.',
+			en: 'Site and dashboard for ShellBox, an agency that buys from US stores and ships the order to Cuba. Astro with server rendering and Svelte islands only where interactivity is needed: a stock catalogue backed by MongoDB, an admin panel with JWT sessions and photo uploads to S3, and every rate centralised in a single configuration file.',
 		},
 	},
 	{
-		slug: 'neurona-iris',
-		year: '2025',
-		status: 'archived',
-		stack: ['Java', 'SOM'],
-		links: { repo: 'https://github.com/Fabian1820/NeuronaIris' },
-		title: { es: 'NeuronaIris', en: 'NeuronaIris' },
+		slug: 'golazo',
+		year: '2026',
+		status: 'oss',
+		image: golazoImg,
+		stack: ['Python', 'scikit-learn', 'pandas', 'Flask'],
+		links: { repo: 'https://github.com/Fabian1820/golazo' },
+		title: { es: 'Golazo', en: 'Golazo' },
 		tagline: {
-			es: 'Clasificador con mapa autoorganizado',
-			en: 'Self-organizing map classifier',
+			es: 'Predicción calibrada de fútbol, con backtest reproducible',
+			en: 'Calibrated football forecasting with a reproducible backtest',
 		},
 		description: {
-			es: 'Proyecto universitario de redes neuronales: clasificación del dataset Iris mediante un mapa autoorganizado (SOM), implementado desde cero en equipo para entender el algoritmo por dentro.',
-			en: 'University neural-network project: classifying the Iris dataset with a self-organizing map (SOM), implemented from scratch as a team to understand the algorithm from the inside.',
+			es: 'Modelo de probabilidades para las cinco grandes ligas europeas. La primera versión entrenaba con estadísticas del mismo partido que intentaba predecir, así que la reconstruí entera: una sola definición de las variables para entrenamiento y producción, backtest walk-forward sobre 12.553 partidos que el modelo nunca vio y un registro encadenado por hash que firma cada pronóstico antes del saque inicial.',
+			en: 'Probability model for the five big European leagues. The first version trained on statistics from the very match it was predicting, so I rebuilt it from scratch: a single feature definition shared by training and production, a walk-forward backtest over 12,553 matches the model never saw, and a hash-chained ledger that signs every forecast before kick-off.',
+		},
+	},
+	{
+		slug: 'panal-som',
+		year: '2025 — 2026',
+		status: 'oss',
+		image: panalSomImg,
+		stack: ['Java', 'JavaFX', 'Maven', 'JUnit'],
+		links: { repo: 'https://github.com/Fabian1820/panal-som' },
+		title: { es: 'Panal SOM', en: 'Panal SOM' },
+		tagline: {
+			es: 'Mapas autoorganizados sobre cualquier CSV',
+			en: 'Self-organizing maps over any CSV',
+		},
+		description: {
+			es: 'Aplicación de escritorio que entrena mapas autoorganizados sobre cualquier CSV numérico, con tres topologías, U-matrix, planos de componentes y búsqueda automática de hiperparámetros. Nació como proyecto de equipo en la CUJAE y lo retomé para soltarlo del dataset con el que nació, medir su calidad con validación cruzada y dejarlo empaquetado, con 100 pruebas e integración continua.',
+			en: 'Desktop application that trains self-organizing maps over any numeric CSV, with three topologies, a U-matrix, component planes and automatic hyperparameter search. It started as a team project at CUJAE and I picked it up to decouple it from the dataset it was born with, measure its quality with cross-validation and ship it packaged, with 100 tests and continuous integration.',
 		},
 	},
 ];

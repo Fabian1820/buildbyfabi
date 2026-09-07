@@ -34,8 +34,10 @@ export const UI = {
 			title: 'Cosas que he construido',
 			subtitle: 'Sistemas en producción, productos propios y trabajo académico.',
 			viewLive: 'Ver en vivo',
+			previewAlt: 'Vista previa de',
+			noPreview: 'código privado · sin captura pública',
 			viewCode: 'Código',
-			status: { live: 'En producción', wip: 'En desarrollo', private: 'Privado', archived: 'Archivado' },
+			status: { live: 'En producción', wip: 'En desarrollo', oss: 'Código abierto', private: 'Privado', archived: 'Archivado' },
 		},
 		contact: {
 			eyebrow: 'Contacto',
@@ -90,8 +92,10 @@ export const UI = {
 			title: 'Things I have built',
 			subtitle: 'Production systems, my own products, and academic work.',
 			viewLive: 'Live site',
+			previewAlt: 'Preview of',
+			noPreview: 'private code · no public screenshot',
 			viewCode: 'Source',
-			status: { live: 'In production', wip: 'In progress', private: 'Private', archived: 'Archived' },
+			status: { live: 'In production', wip: 'In progress', oss: 'Open source', private: 'Private', archived: 'Archived' },
 		},
 		contact: {
 			eyebrow: 'Contact',
