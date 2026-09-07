@@ -8,7 +8,8 @@ const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
 
 const featured = PROJECTS.filter((p) => p.featured);
-const rest = PROJECTS.filter((p) => !p.featured);
+const principales = PROJECTS.filter((p) => !p.featured && !p.secondary);
+const secundarios = PROJECTS.filter((p) => !p.featured && p.secondary);
 ---
 
 <section id="work" class="scroll-mt-24 border-t border-border">
@@ -16,11 +17,71 @@ const rest = PROJECTS.filter((p) => !p.featured);
 		<SectionHeading eyebrow={ui.work.eyebrow} title={ui.work.title} subtitle={ui.work.subtitle} />
 
 		<div class="mt-12 grid gap-5 lg:grid-cols-2">
-			{featured.map((p) => <ProjectCard project={p} size="lg" />)}
+			{featured.map((p, i) => <ProjectCard project={p} size="lg" index={i} />)}
 		</div>
 
 		<div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-			{rest.map((p) => <ProjectCard project={p} size="sm" />)}
+			{principales.map((p, i) => <ProjectCard project={p} size="sm" index={i} />)}
 		</div>
+
+		{
+			secundarios.length > 0 && (
+				<>
+					<div id="mas-proyectos" class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" hidden>
+						{secundarios.map((p, i) => (
+							<ProjectCard project={p} size="sm" index={i} />
+						))}
+					</div>
+
+					<div class="mt-10 flex justify-center">
+						<button
+							id="ver-mas"
+							type="button"
+							aria-expanded="false"
+							aria-controls="mas-proyectos"
+							data-mas={`${ui.work.showMore} (${secundarios.length})`}
+							data-menos={ui.work.showLess}
+							class="group inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-muted transition-colors hover:border-accent hover:text-text"
+						>
+							<span data-etiqueta>{`${ui.work.showMore} (${secundarios.length})`}</span>
+							<svg
+								class="h-4 w-4 transition-transform duration-300 group-aria-expanded:rotate-180"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								<path d="m6 9 6 6 6-6" />
+							</svg>
+						</button>
+					</div>
+				</>
+			)
+		}
 	</div>
 </section>
+
+<script>
+	// Los proyectos secundarios viven en el HTML desde el principio (los lee un
+	// buscador o quien navegue sin JS); el botón sólo cambia su visibilidad.
+	const boton = document.getElementById('ver-mas');
+	const caja = document.getElementById('mas-proyectos');
+
+	if (boton && caja) {
+		const etiqueta = boton.querySelector<HTMLElement>('[data-etiqueta]');
+
+		boton.addEventListener('click', () => {
+			const abierto = boton.getAttribute('aria-expanded') === 'true';
+			boton.setAttribute('aria-expanded', String(!abierto));
+			caja.hidden = abierto;
+			if (etiqueta) {
+				etiqueta.textContent = (abierto ? boton.dataset.mas : boton.dataset.menos) ?? '';
+			}
+			// Al plegar, el botón puede quedar fuera de la pantalla: se le sigue.
+			if (abierto) boton.scrollIntoView({ block: 'center', behavior: 'smooth' });
+		});
+	}
+</script>

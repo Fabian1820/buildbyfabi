@@ -1,5 +1,6 @@
 import type { ImageMetadata } from 'astro';
 
+import gemeloImg from '../assets/projects/gemelo-digital.jpg';
 import golazoImg from '../assets/projects/golazo.jpg';
 import llegoImg from '../assets/projects/llego.jpg';
 import panalSomImg from '../assets/projects/panal-som.png';
@@ -28,9 +29,13 @@ export const SITE = {
 export type Project = {
 	slug: string;
 	featured?: boolean;
+	/** Queda detrás del botón «ver más» en la sección de proyectos. */
+	secondary?: boolean;
 	year: string;
 	status?: 'live' | 'wip' | 'oss' | 'private' | 'archived';
 	image?: ImageMetadata;
+	/** Marca la tarjeta con «código privado»: explica por qué no hay enlace al repositorio. */
+	privateCode?: boolean;
 	stack: string[];
 	links?: { live?: string; repo?: string };
 	title: { es: string; en: string };
@@ -65,6 +70,8 @@ export const PROJECTS: Project[] = [
 		featured: true,
 		year: '2026',
 		status: 'private',
+		privateCode: true,
+		image: gemeloImg,
 		stack: ['React', 'FastAPI', 'Python', 'MongoDB'],
 		title: { es: 'Gemelo Digital Fotovoltaico', en: 'Photovoltaic Digital Twin' },
 		tagline: {
@@ -82,7 +89,10 @@ export const PROJECTS: Project[] = [
 		status: 'live',
 		image: llegoImg,
 		stack: ['Astro', 'Svelte', 'TypeScript', 'Kotlin'],
-		links: { live: 'https://llegoweb-production.up.railway.app' },
+		links: {
+			live: 'https://llegoweb-production.up.railway.app',
+			repo: 'https://github.com/Fabian1820/LlegoBusiness',
+		},
 		title: { es: 'Llegó', en: 'Llegó' },
 		tagline: {
 			es: 'Plataforma de compra asistida por IA',
@@ -97,6 +107,7 @@ export const PROJECTS: Project[] = [
 		slug: 'trimio',
 		year: '2026',
 		status: 'wip',
+		privateCode: true,
 		image: trimioImg,
 		stack: ['Nuxt', 'Vue', 'FastAPI', 'MongoDB'],
 		links: { live: 'https://trimio-frontend-production.up.railway.app' },
@@ -118,7 +129,7 @@ export const PROJECTS: Project[] = [
 		stack: ['Astro', 'Svelte', 'TypeScript', 'MongoDB', 'S3'],
 		links: {
 			live: 'https://shellbox.up.railway.app',
-			repo: 'https://github.com/Fabian1820/ShellBoxLandingPage',
+			repo: 'https://github.com/Fabian1820/ShellBox',
 		},
 		title: { es: 'ShellBox Encargos', en: 'ShellBox Encargos' },
 		tagline: {
@@ -132,6 +143,7 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'golazo',
+		secondary: true,
 		year: '2026',
 		status: 'oss',
 		image: golazoImg,
@@ -149,6 +161,7 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'panal-som',
+		secondary: true,
 		year: '2025 — 2026',
 		status: 'oss',
 		image: panalSomImg,

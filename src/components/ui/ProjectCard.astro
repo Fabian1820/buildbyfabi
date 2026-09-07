@@ -6,9 +6,11 @@ import type { Project } from '../../data/site';
 interface Props {
 	project: Project;
 	size?: 'sm' | 'lg';
+	/** Posición dentro de su rejilla: escalona la entrada al hacer scroll. */
+	index?: number;
 }
 
-const { project, size = 'sm' } = Astro.props;
+const { project, size = 'sm', index = 0 } = Astro.props;
 const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
 const lg = size === 'lg';
@@ -23,6 +25,8 @@ const statusTone: Record<string, string> = {
 ---
 
 <article
+	data-reveal
+	style={`--reveal-i:${index}`}
 	class:list={[
 		'spotlight group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors duration-300 hover:border-accent/50',
 		lg ? 'p-7 sm:p-8' : 'p-6',
@@ -114,7 +118,7 @@ const statusTone: Record<string, string> = {
 		</ul>
 
 		{
-			(project.links?.live || project.links?.repo) && (
+			(project.links?.live || project.links?.repo || project.privateCode) && (
 				<div class="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-5">
 					{project.links?.live && (
 						<a
@@ -128,6 +132,15 @@ const statusTone: Record<string, string> = {
 							</svg>
 							{ui.work.viewLive}
 						</a>
+					)}
+					{project.privateCode && (
+						<span class="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs font-medium text-faint">
+							<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<rect x="4" y="10" width="16" height="10" rx="2" />
+								<path d="M8 10V7a4 4 0 0 1 8 0v3" />
+							</svg>
+							{ui.work.privateCode}
+						</span>
 					)}
 					{project.links?.repo && (
 						<a
