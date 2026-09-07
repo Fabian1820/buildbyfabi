@@ -8,11 +8,12 @@ import Footer from '../components/sections/Footer.astro';
 interface Props {
 	title?: string;
 	description?: string;
+	noindex?: boolean;
 }
 
 const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
-const { title, description } = Astro.props;
+const { title, description, noindex = false } = Astro.props;
 
 const pageTitle = title ?? `${SITE.shortName} — ${ui.hero.role}`;
 const pageDesc = description ?? ui.hero.tagline;
@@ -52,6 +53,7 @@ const jsonLd = {
 		<title>{pageTitle}</title>
 		<meta name="description" content={pageDesc} />
 		<link rel="canonical" href={canonical} />
+		{noindex && <meta name="robots" content="noindex, follow" />}
 
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="sitemap" href="/sitemap-index.xml" />

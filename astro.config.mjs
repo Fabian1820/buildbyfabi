@@ -8,7 +8,7 @@ import sitemap from '@astrojs/sitemap';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://buildbyfabi.dev',
-  integrations: [sitemap()],
+  integrations: [sitemap({ filter: (page) => !page.includes('404') })],
   i18n: {
     defaultLocale: 'es',
     locales: ['es', 'en'],

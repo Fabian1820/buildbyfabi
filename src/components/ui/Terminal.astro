@@ -5,9 +5,11 @@ interface Props {
 	user: string;
 	host: string;
 	steps: TerminalStep[];
+	/** Menos alto reservado, para terminales de pocas líneas. */
+	dense?: boolean;
 }
 
-const { user, host, steps } = Astro.props;
+const { user, host, steps, dense = false } = Astro.props;
 
 const toneClass = (tone?: string) =>
 	tone === 'accent' ? 'text-accent' : tone === 'muted' ? 'text-faint' : 'text-muted';
@@ -30,7 +32,10 @@ const toneClass = (tone?: string) =>
 
 	<div
 		id="term"
-		class="min-h-[300px] px-4 py-4 font-mono text-[12.5px] leading-relaxed sm:min-h-[320px] sm:text-[13px]"
+		class:list={[
+			'px-4 py-4 font-mono text-[12.5px] leading-relaxed sm:text-[13px]',
+			dense ? 'min-h-[210px]' : 'min-h-[300px] sm:min-h-[320px]',
+		]}
 	>
 		{
 			steps.map((step, i) => (

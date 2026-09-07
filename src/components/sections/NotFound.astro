@@ -1,0 +1,149 @@
+---
+import Terminal from '../ui/Terminal.astro';
+import { getLocale, t, localePath, UI, type Locale } from '../../i18n/ui';
+
+const locale: Locale = getLocale(Astro.url);
+const ui = t(locale);
+const base = localePath(locale, '/');
+
+// El servidor estático sirve /404.html para cualquier ruta que no exista, así que
+// esta página se escribe en español y el script de abajo la pasa a inglés cuando
+// la ruta pedida empieza por /en/. __PATH__ se sustituye por esa misma ruta.
+const otroLocale: Locale = locale === 'es' ? 'en' : 'es';
+const otro = UI[otroLocale].notFound;
+const otroBase = localePath(otroLocale, '/');
+const otroNav = UI[otroLocale].nav;
+const pieTraducido = [
+	[ui.footer.rights, UI[otroLocale].footer.rights],
+	[ui.footer.built, UI[otroLocale].footer.built],
+];
+
+const steps = [
+	{ cmd: 'cd __PATH__', out: 'cd: no such file or directory: __PATH__' },
+	{
+		cmd: 'ls ~',
+		out: 'about   stack   work   contact',
+		tone: 'muted' as const,
+	},
+];
+---
+
+<section class="relative overflow-hidden">
+	<div class="pointer-events-none absolute inset-0 bg-grid mask-fade-b opacity-50" aria-hidden="true"></div>
+	<div
+		class="pointer-events-none absolute left-1/2 top-[-10%] h-[420px] w-full max-w-[820px] -translate-x-1/2 rounded-full bg-accent/10 blur-[120px]"
+		aria-hidden="true"
+	>
+	</div>
+
+	<div class="relative mx-auto max-w-3xl px-5 pb-24 pt-28 sm:px-8 sm:pb-32 sm:pt-36">
+		<div class="animate-rise">
+			<p class="font-mono text-sm text-accent">404</p>
+
+			<h1
+				class="mt-4 text-[2.2rem] font-semibold leading-[1.1] tracking-tight sm:text-5xl"
+				data-otro-idioma={otro.title}
+			>
+				{ui.notFound.title}
+			</h1>
+
+			<p class="mt-5 max-w-lg text-base leading-relaxed text-muted sm:text-lg" data-otro-idioma={otro.message}>
+				{ui.notFound.message}
+			</p>
+
+			<div class="mt-9">
+				<a
+					id="volver-inicio"
+					href={base}
+					data-otro-inicio={otroBase}
+					class="group inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-medium text-white transition-[filter,box-shadow] hover:brightness-110 hover:shadow-lg hover:shadow-accent/25"
+				>
+					<svg class="h-4 w-4 transition-transform group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M19 12H5M12 19l-7-7 7-7"></path>
+					</svg>
+					<span data-otro-idioma={otro.back}>{ui.notFound.back}</span>
+				</a>
+			</div>
+		</div>
+
+		<div id="term-404" class="mt-12 animate-rise [animation-delay:120ms]">
+			<Terminal user="fabian" host="buildbyfabi" steps={steps} dense />
+		</div>
+	</div>
+</section>
+
+<script is:inline define:vars={{ locale, otroBase, otroNav, pieTraducido, otroTitulo: `404 — ${otro.title}` }}>
+	// Corre durante el parseo, antes que el script (module, diferido) del terminal,
+	// así la animación ya teclea la ruta real en vez del marcador.
+	(() => {
+		const caja = document.getElementById('term-404');
+		if (!caja) return;
+
+		const ruta = decodeURI(location.pathname).slice(0, 64) || '/';
+		const pon = (texto) => texto.split('__PATH__').join(ruta);
+
+		caja.querySelectorAll('[data-text]').forEach((el) => {
+			el.dataset.text = pon(el.dataset.text);
+		});
+
+		const paseo = document.createTreeWalker(caja, NodeFilter.SHOW_TEXT);
+		while (paseo.nextNode()) {
+			const nodo = paseo.currentNode;
+			if (nodo.nodeValue.includes('__PATH__')) nodo.nodeValue = pon(nodo.nodeValue);
+		}
+
+		// El servidor sirve siempre el 404 del idioma por defecto: si la ruta pedida
+		// era del otro idioma, se cambian los textos en vez de responder en español.
+		const idiomaPedido = ruta.startsWith('/en/') || ruta === '/en' ? 'en' : 'es';
+		if (idiomaPedido === locale) return;
+
+		document.documentElement.lang = idiomaPedido;
+		document.title = otroTitulo;
+		document.querySelectorAll('[data-otro-idioma]').forEach((el) => {
+			el.textContent = el.dataset.otroIdioma;
+		});
+		const inicio = document.getElementById('volver-inicio');
+		if (inicio) inicio.href = inicio.dataset.otroInicio;
+
+		// La cabecera viene del idioma por defecto: se traduce por el ancla del enlace,
+		// que no cambia aunque cambien las etiquetas.
+		const etiquetas = {
+			'#about': otroNav.about,
+			'#stack': otroNav.stack,
+			'#work': otroNav.work,
+			'#contact': otroNav.contact,
+		};
+		const nav = document.getElementById('site-nav');
+		if (!nav) return;
+
+		// El conmutador de idioma se guarda antes de tocar nada: apunta a otroBase,
+		// que es justo el valor que van a tomar los demás enlaces.
+		const conmutador = [...nav.querySelectorAll('a')].filter((a) => a.getAttribute('href') === otroBase);
+		const propio = locale === 'es' ? '/' : '/en/';
+
+		nav.querySelectorAll('a[href*="#"]').forEach((a) => {
+			const ancla = '#' + a.getAttribute('href').split('#')[1];
+			if (!etiquetas[ancla]) return;
+			a.textContent = etiquetas[ancla];
+			a.setAttribute('href', otroBase + ancla);
+		});
+		nav.querySelectorAll(`a[href="${propio}"]`).forEach((a) => a.setAttribute('href', otroBase));
+		conmutador.forEach((a) => {
+			a.setAttribute('href', propio);
+			a.textContent = locale === 'es' ? 'ES' : 'EN';
+		});
+
+		// El pie todavía no está en el DOM cuando corre este script: se espera al final.
+		document.addEventListener('DOMContentLoaded', () => {
+			const pie = document.querySelector('footer');
+			if (!pie) return;
+			const textos = document.createTreeWalker(pie, NodeFilter.SHOW_TEXT);
+			while (textos.nextNode()) {
+				const nodo = textos.currentNode;
+				for (const [de, a] of pieTraducido) {
+					if (nodo.nodeValue.includes(de)) nodo.nodeValue = nodo.nodeValue.split(de).join(a);
+				}
+			}
+		});
+	})();
+</script>
