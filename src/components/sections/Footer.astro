@@ -1,7 +1,6 @@
 ---
 import { getLocale, t, type Locale } from '../../i18n/ui';
 import { SITE } from '../../data/site';
-import LineaSolar from '../ui/LineaSolar.astro';
 
 const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
@@ -9,32 +8,28 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="border-t border-border">
-	<div class="mx-auto max-w-6xl px-5 sm:px-8">
-		<LineaSolar />
+	<div
+		class="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-8"
+	>
+		<div class="flex flex-col gap-1">
+			<span class="font-mono text-sm text-text">{SITE.domain}</span>
+			<span class="text-xs text-faint">
+				© {year} {SITE.name}. {ui.footer.rights}
+			</span>
+		</div>
 
-		<div
-			class="flex flex-col gap-4 py-10 sm:flex-row sm:items-center sm:justify-between"
-		>
-			<div class="flex flex-col gap-1">
-				<span class="font-mono text-sm text-text">{SITE.domain}</span>
-				<span class="text-xs text-faint">
-					© {year} {SITE.name}. {ui.footer.rights}
-				</span>
-			</div>
-
-			<div class="flex items-center gap-4 text-xs text-faint">
-				<span class="font-mono">
-					{ui.footer.built} <span class="text-accent">Astro</span> + <span class="text-accent">Tailwind</span>
-				</span>
-				<a
-					href={SITE.github}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="transition-colors hover:text-text"
-				>
-					GitHub
-				</a>
-			</div>
+		<div class="flex items-center gap-4 text-xs text-faint">
+			<span class="font-mono">
+				{ui.footer.built} <span class="text-accent">Astro</span> + <span class="text-accent">Tailwind</span>
+			</span>
+			<a
+				href={SITE.github}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="transition-colors hover:text-text"
+			>
+				GitHub
+			</a>
 		</div>
 	</div>
 </footer>

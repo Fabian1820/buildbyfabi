@@ -1,14 +1,4 @@
 ---
-/**
- * El terminal del inicio.
- *
- * Empieza tecleando solo unos guiños y, cuando termina, entrega el prompt: es
- * una consola de verdad, con historial y tabulador, que responde con los datos
- * de esta misma página. La promesa que hacía el dibujo, cumplida.
- */
-import { SITE, PROJECTS, STACK } from '../../data/site';
-import { getLocale, t, type Locale } from '../../i18n/ui';
-
 export type TerminalStep = { cmd: string; out: string; tone?: 'accent' | 'muted' };
 
 interface Props {
@@ -17,47 +7,12 @@ interface Props {
 	steps: TerminalStep[];
 	/** Menos alto reservado, para terminales de pocas líneas. */
 	dense?: boolean;
-	/** Entrega el prompt al acabar la animación. */
-	interactivo?: boolean;
 }
 
-const { user, host, steps, dense = false, interactivo = false } = Astro.props;
-
-const locale: Locale = getLocale(Astro.url);
-const ui = t(locale);
+const { user, host, steps, dense = false } = Astro.props;
 
 const toneClass = (tone?: string) =>
 	tone === 'accent' ? 'text-accent' : tone === 'muted' ? 'text-faint' : 'text-muted';
-
-// Todo lo que responde la consola sale de la misma fuente que la página.
-const datos = interactivo
-	? {
-			locale,
-			yo: {
-				nombre: SITE.name,
-				rol: ui.hero.role,
-				lugar: SITE.location[locale],
-				email: SITE.email,
-				whatsapp: SITE.whatsappDisplay,
-				github: `github.com/${SITE.githubUser}`,
-			},
-			proyectos: PROJECTS.map((p) => ({
-				slug: p.slug,
-				titulo: p.title[locale],
-				tagline: p.tagline[locale],
-				estado: p.status ? ui.work.status[p.status] : '',
-				stack: p.stack,
-				vivo: p.links?.live,
-				repo: p.links?.repo,
-			})),
-			stack: STACK.map((grupo) => ({
-				label: grupo.label[locale],
-				items: grupo.items.map((i) => i.name),
-			})),
-			cv: SITE.cv[locale],
-			textos: ui.terminal,
-		}
-	: null;
 ---
 
 <div
@@ -77,16 +32,9 @@ const datos = interactivo
 
 	<div
 		id="term"
-		data-datos={datos ? JSON.stringify(datos) : undefined}
-		data-usuario={user}
-		data-host={host}
 		class:list={[
 			'px-4 py-4 font-mono text-[12.5px] leading-relaxed sm:text-[13px]',
-			interactivo
-				? 'h-[320px] overflow-y-auto sm:h-[360px]'
-				: dense
-					? 'min-h-[210px]'
-					: 'min-h-[300px] sm:min-h-[320px]',
+			dense ? 'min-h-[210px]' : 'min-h-[300px] sm:min-h-[320px]',
 		]}
 	>
 		{
@@ -105,49 +53,16 @@ const datos = interactivo
 				</>
 			))
 		}
-
-		{/* Salida de los comandos que se vayan escribiendo. */}
-		{interactivo && <div id="term-salida" aria-live="polite" />}
-
 		<p class="term-line term-final flex flex-wrap items-baseline gap-x-2" data-kind="final">
 			<span class="shrink-0 select-none">
 				<span class="text-accent">{user}</span><span class="text-faint">@</span><span class="text-muted">{host}</span><span class="text-faint"> ~ </span><span class="text-accent">$</span>
 			</span>
-			<span
-				class="term-caret inline-block h-[1em] w-[7px] translate-y-[2px] bg-accent animate-blink"
-				aria-hidden="true"></span>
+			<span class="term-caret inline-block h-[1em] w-[7px] translate-y-[2px] bg-accent animate-blink" aria-hidden="true"></span>
 		</p>
-
-		{
-			interactivo && (
-				<form id="term-form" class="flex flex-wrap items-baseline gap-x-2" hidden>
-					<label for="term-input" class="shrink-0 select-none">
-						<span class="text-accent">{user}</span>
-						<span class="text-faint">@</span>
-						<span class="text-muted">{host}</span>
-						<span class="text-faint"> ~ </span>
-						<span class="text-accent">$</span>
-						<span class="sr-only">{ui.terminal.etiqueta}</span>
-					</label>
-					<input
-						id="term-input"
-						type="text"
-						autocomplete="off"
-						autocapitalize="off"
-						autocorrect="off"
-						spellcheck="false"
-						enterkeyhint="go"
-						class="min-w-0 flex-1 bg-transparent font-mono text-text caret-accent outline-none"
-					/>
-				</form>
-			)
-		}
 	</div>
 </div>
 
 <script>
-	import { ejecutar, completar, type DatosConsola, type Linea } from '../../lib/consola';
-
 	const TYPE = 20;
 	const AFTER_CMD = 190;
 	const AFTER_OUT = 110;
@@ -157,78 +72,18 @@ const datos = interactivo
 	if (term) {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		const lines = Array.from(term.querySelectorAll<HTMLElement>('.term-line'));
-		const caretLine = term.querySelector<HTMLElement>('.term-final');
 
-		const datos: DatosConsola | null = term.dataset.datos ? JSON.parse(term.dataset.datos) : null;
-		const interactivo = datos !== null;
-		const formulario = document.getElementById('term-form') as HTMLFormElement | null;
-		const entrada = document.getElementById('term-input') as HTMLInputElement | null;
-		const salida = document.getElementById('term-salida');
-
-		const TONOS: Record<string, string> = {
-			acento: 'text-accent',
-			tenue: 'text-faint',
-			error: 'text-rose-500',
-		};
-
-		/** Escribe una línea en la salida, respetando los espacios del formato. */
-		const imprimir = (linea: Linea) => {
-			const p = document.createElement('p');
-			p.className = `whitespace-pre-wrap ${linea.tono ? TONOS[linea.tono] : 'text-muted'}`;
-			p.textContent = linea.texto;
-			salida?.appendChild(p);
-		};
-
-		/** El eco del comando, tal y como lo teclearon. */
-		const ecoDelComando = (texto: string) => {
-			const p = document.createElement('p');
-			p.className = 'mt-3 flex flex-wrap items-baseline gap-x-2';
-			const prompt = document.createElement('span');
-			prompt.className = 'shrink-0 select-none text-accent';
-			prompt.textContent = `${term.dataset.usuario}@${term.dataset.host} ~ $`;
-			const cuerpo = document.createElement('span');
-			cuerpo.className = 'text-text';
-			cuerpo.textContent = texto;
-			p.append(prompt, cuerpo);
-			salida?.appendChild(p);
-		};
-
-		const abrirPrompt = () => {
-			if (!formulario || !caretLine) return;
-			caretLine.hidden = true;
-			formulario.hidden = false;
-			if (datos) imprimir({ texto: datos.textos.pista, tono: 'tenue' });
-		};
-
-		// Quien quiera escribir no espera a que termine la animación: el primer
-		// clic o la primera tecla la adelantan hasta el final.
-		let saltado = false;
-		const saltarIntro = () => {
-			if (saltado) return;
-			saltado = true;
-			lines.forEach((linea) => {
-				if (linea.dataset.kind === 'final') return;
-				linea.style.display = linea.dataset.kind === 'blank' ? 'block' : 'flex';
-				const span = linea.querySelector<HTMLElement>('.term-txt');
-				if (span) {
-					span.textContent = span.dataset.text ?? '';
-					span.classList.remove('typing');
-				}
-			});
-			abrirPrompt();
-		};
-
-		// --- La animación de entrada, igual que siempre ---
 		if (!reduced && lines.length) {
+			// Punto de partida: todo oculto salvo el cursor final, que viaja con la escritura.
 			lines.forEach((l) => (l.style.display = 'none'));
 			term.querySelectorAll<HTMLElement>('.term-txt').forEach((s) => (s.textContent = ''));
 
+			const caretLine = term.querySelector<HTMLElement>('.term-final');
 			const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 			const run = async () => {
 				await wait(START);
 				for (const line of lines) {
-					if (saltado) return;
 					const kind = line.dataset.kind;
 					if (kind === 'final') break;
 
@@ -240,7 +95,6 @@ const datos = interactivo
 						const text = span?.dataset.text ?? '';
 						span?.classList.add('typing');
 						for (let i = 1; i <= text.length; i++) {
-							if (saltado) return;
 							if (span) span.textContent = text.slice(0, i);
 							await wait(TYPE);
 						}
@@ -252,89 +106,9 @@ const datos = interactivo
 					}
 				}
 				if (caretLine) caretLine.style.display = 'flex';
-				saltado = true;
-				abrirPrompt();
 			};
 
 			run();
-			if (interactivo) {
-				term.addEventListener('pointerdown', saltarIntro, { once: true });
-				term.addEventListener('keydown', saltarIntro, { once: true });
-			}
-		} else {
-			abrirPrompt();
-		}
-
-		// --- La consola ---
-		if (formulario && entrada && salida && datos) {
-			const historial: string[] = [];
-			let posicion = -1;
-
-			// Pinchar en cualquier hueco del terminal lleva el cursor al prompt,
-			// pero sin robar el foco al cargar ni al llegar por un ancla.
-			term.addEventListener('click', (e) => {
-				if (window.getSelection()?.toString()) return;
-				if ((e.target as HTMLElement).closest('a')) return;
-				entrada.focus({ preventScroll: true });
-			});
-
-			formulario.addEventListener('submit', (e) => {
-				e.preventDefault();
-				const texto = entrada.value;
-				entrada.value = '';
-				if (!texto.trim()) return;
-
-				historial.unshift(texto);
-				posicion = -1;
-				ecoDelComando(texto);
-
-				const { lineas, accion } = ejecutar(texto, datos);
-
-				if (accion === 'limpiar') {
-					salida.replaceChildren();
-					// También se van los guiños de la animación: pantalla limpia.
-					lines.forEach((l) => (l.style.display = 'none'));
-					return;
-				}
-
-				lineas.forEach(imprimir);
-
-				if (accion === 'tema') {
-					document.getElementById('theme-toggle')?.click();
-				} else if (accion === 'cv') {
-					// Safari sólo dispara la descarga si el enlace está en el documento.
-					const enlace = document.createElement('a');
-					enlace.href = datos.cv;
-					enlace.download = '';
-					enlace.hidden = true;
-					document.body.appendChild(enlace);
-					enlace.click();
-					enlace.remove();
-				}
-
-				term.scrollTop = term.scrollHeight;
-			});
-
-			entrada.addEventListener('keydown', (e) => {
-				if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-					if (!historial.length) return;
-					e.preventDefault();
-					posicion =
-						e.key === 'ArrowUp'
-							? Math.min(posicion + 1, historial.length - 1)
-							: Math.max(posicion - 1, -1);
-					entrada.value = posicion === -1 ? '' : historial[posicion];
-					return;
-				}
-
-				if (e.key === 'Tab') {
-					const completado = completar(entrada.value, datos);
-					if (completado) {
-						e.preventDefault();
-						entrada.value = completado;
-					}
-				}
-			});
 		}
 	}
 </script>

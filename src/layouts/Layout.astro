@@ -78,56 +78,18 @@ const jsonLd = {
 		<meta name="twitter:description" content={pageDesc} />
 		<meta name="twitter:image" content={ogImage} />
 
-		{/* Lo pinta el script de abajo según el tema que salga; sin JS queda claro. */}
-		<meta name="theme-color" content="#f7f5f1" id="tema-color" />
+		<meta name="theme-color" content="#0a0d14" media="(prefers-color-scheme: dark)" />
+		<meta name="theme-color" content="#f7f5f1" media="(prefers-color-scheme: light)" />
 
 		<script is:inline set:html={JSON.stringify(jsonLd)} type="application/ld+json" />
 
 		{/* Evita el flash de tema incorrecto: corre antes del primer paint */}
 		<script is:inline>
 			(() => {
-				// Sin preferencia guardada, el tema lo decide el sol sobre La Habana:
-				// de día claro, de noche oscuro. Copia mínima de altitudSolar() de
-				// src/lib/sol.ts — si cambia la fórmula allí, cambia también aquí.
-				const solArriba = () => {
-					const ahora = new Date();
-					const dia = Math.floor((ahora - Date.UTC(ahora.getUTCFullYear(), 0, 1)) / 86400000);
-					const hora = ahora.getUTCHours() + ahora.getUTCMinutes() / 60;
-					const g = ((2 * Math.PI) / 365) * (dia + (hora - 12) / 24);
-					const ecuacion =
-						229.18 *
-						(0.000075 +
-							0.001868 * Math.cos(g) -
-							0.032077 * Math.sin(g) -
-							0.014615 * Math.cos(2 * g) -
-							0.040849 * Math.sin(2 * g));
-					const declinacion =
-						0.006918 -
-						0.399912 * Math.cos(g) +
-						0.070257 * Math.sin(g) -
-						0.006758 * Math.cos(2 * g) +
-						0.000907 * Math.sin(2 * g) -
-						0.002697 * Math.cos(3 * g) +
-						0.00148 * Math.sin(3 * g);
-					const angulo = (((hora * 60 + ecuacion + 4 * -82.3666) / 4 - 180) * Math.PI) / 180;
-					const lat = (23.1136 * Math.PI) / 180;
-					const cosCenit =
-						Math.sin(lat) * Math.sin(declinacion) +
-						Math.cos(lat) * Math.cos(declinacion) * Math.cos(angulo);
-					return 90 - (Math.acos(Math.min(1, Math.max(-1, cosCenit))) * 180) / Math.PI > -0.833;
-				};
-
 				const stored = localStorage.getItem('theme');
-				let dark;
-				try {
-					dark = stored ? stored === 'dark' : !solArriba();
-				} catch {
-					dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				}
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const dark = stored ? stored === 'dark' : prefersDark;
 				document.documentElement.classList.toggle('dark', dark);
-				document
-					.getElementById('tema-color')
-					?.setAttribute('content', dark ? '#0a0d14' : '#f7f5f1');
 
 				// Marca el documento antes de pintar para que lo revelable nazca
 				// oculto; quien pidió menos movimiento ve la página tal cual.
