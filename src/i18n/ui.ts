@@ -58,6 +58,14 @@ export const UI = {
 		},
 		theme: { toggle: 'Cambiar tema' },
 		lang: { toggle: 'Cambiar idioma' },
+		sol: {
+			enHabana: 'en La Habana',
+			sobre: 'sol a {grados}° sobre el horizonte',
+			bajo: 'sol a {grados}° bajo el horizonte',
+			luz: 'quedan {tiempo} de luz',
+			amanecer: 'amanece en {tiempo}',
+			titulo: 'Hora y altura del sol sobre La Habana, calculadas en tu navegador',
+		},
 		notFound: {
 			title: 'Página no encontrada',
 			message: 'La ruta que buscas no existe en este servidor.',
@@ -119,6 +127,14 @@ export const UI = {
 		},
 		theme: { toggle: 'Toggle theme' },
 		lang: { toggle: 'Switch language' },
+		sol: {
+			enHabana: 'in Havana',
+			sobre: 'sun {grados}° above the horizon',
+			bajo: 'sun {grados}° below the horizon',
+			luz: '{tiempo} of daylight left',
+			amanecer: 'sunrise in {tiempo}',
+			titulo: 'Time and sun elevation over Havana, computed in your browser',
+		},
 		notFound: {
 			title: 'Page not found',
 			message: 'The route you are looking for does not exist on this server.',
