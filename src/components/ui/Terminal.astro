@@ -160,6 +160,7 @@ const datos = interactivo
 		const caretLine = term.querySelector<HTMLElement>('.term-final');
 
 		const datos: DatosConsola | null = term.dataset.datos ? JSON.parse(term.dataset.datos) : null;
+		const interactivo = datos !== null;
 		const formulario = document.getElementById('term-form') as HTMLFormElement | null;
 		const entrada = document.getElementById('term-input') as HTMLInputElement | null;
 		const salida = document.getElementById('term-salida');
@@ -199,6 +200,24 @@ const datos = interactivo
 			if (datos) imprimir({ texto: datos.textos.pista, tono: 'tenue' });
 		};
 
+		// Quien quiera escribir no espera a que termine la animación: el primer
+		// clic o la primera tecla la adelantan hasta el final.
+		let saltado = false;
+		const saltarIntro = () => {
+			if (saltado) return;
+			saltado = true;
+			lines.forEach((linea) => {
+				if (linea.dataset.kind === 'final') return;
+				linea.style.display = linea.dataset.kind === 'blank' ? 'block' : 'flex';
+				const span = linea.querySelector<HTMLElement>('.term-txt');
+				if (span) {
+					span.textContent = span.dataset.text ?? '';
+					span.classList.remove('typing');
+				}
+			});
+			abrirPrompt();
+		};
+
 		// --- La animación de entrada, igual que siempre ---
 		if (!reduced && lines.length) {
 			lines.forEach((l) => (l.style.display = 'none'));
@@ -209,6 +228,7 @@ const datos = interactivo
 			const run = async () => {
 				await wait(START);
 				for (const line of lines) {
+					if (saltado) return;
 					const kind = line.dataset.kind;
 					if (kind === 'final') break;
 
@@ -220,6 +240,7 @@ const datos = interactivo
 						const text = span?.dataset.text ?? '';
 						span?.classList.add('typing');
 						for (let i = 1; i <= text.length; i++) {
+							if (saltado) return;
 							if (span) span.textContent = text.slice(0, i);
 							await wait(TYPE);
 						}
@@ -231,10 +252,15 @@ const datos = interactivo
 					}
 				}
 				if (caretLine) caretLine.style.display = 'flex';
+				saltado = true;
 				abrirPrompt();
 			};
 
 			run();
+			if (interactivo) {
+				term.addEventListener('pointerdown', saltarIntro, { once: true });
+				term.addEventListener('keydown', saltarIntro, { once: true });
+			}
 		} else {
 			abrirPrompt();
 		}

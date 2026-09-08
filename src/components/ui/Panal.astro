@@ -291,8 +291,16 @@ const muestras = PROJECTS.map((proyecto) => {
 				return;
 			}
 
+			// El entrenamiento avanza por tiempo, no por cuadros: en un equipo
+			// lento se dan varias épocas por cuadro en vez de durar diez segundos.
+			const DURACION = 1500;
+			const EPOCAS = 90;
+			const arranque = performance.now();
+
 			const cuadro = () => {
-				mapa.paso(vectores);
+				const avance = Math.min(1, (performance.now() - arranque) / DURACION);
+				const meta = Math.ceil(avance * EPOCAS);
+				while (mapa.epocasDadas < meta && !mapa.terminado) mapa.paso(vectores);
 				repartir();
 				pintar();
 				if (!mapa.terminado) animacion = requestAnimationFrame(cuadro);

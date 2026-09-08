@@ -52,6 +52,11 @@ export class MapaAutoorganizado {
 		return this.epoca >= this.epocas;
 	}
 
+	/** Épocas ya dadas: quien anima decide el ritmo. */
+	get epocasDadas() {
+		return this.epoca;
+	}
+
 	/** Neurona más parecida a un vector: la BMU. */
 	mejorNeurona(vector: readonly number[]): number {
 		let mejor = 0;
