@@ -112,6 +112,7 @@ const links = [
 	themeBtn?.addEventListener('click', () => {
 		const dark = document.documentElement.classList.toggle('dark');
 		localStorage.setItem('theme', dark ? 'dark' : 'light');
+		document.getElementById('tema-color')?.setAttribute('content', dark ? '#0a0d14' : '#f7f5f1');
 	});
 
 	// Menú móvil
