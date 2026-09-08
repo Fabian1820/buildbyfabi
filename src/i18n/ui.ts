@@ -58,6 +58,11 @@ export const UI = {
 		},
 		theme: { toggle: 'Cambiar tema' },
 		lang: { toggle: 'Cambiar idioma' },
+		panal: {
+			alt: 'Panal hexagonal donde cada proyecto ocupa una región del mapa',
+			pista: 'Un mapa autoorganizado coloca solo estos proyectos según el peso de cada área en su stack — los que se parecen quedan vecinos. Pasa el cursor por el panal.',
+			pistaTactil: 'Un mapa autoorganizado coloca solo estos proyectos según el peso de cada área en su stack — los que se parecen quedan vecinos. Toca una celda para ir a su proyecto.',
+		},
 		sol: {
 			enHabana: 'en La Habana',
 			sobre: 'sol a {grados}° sobre el horizonte',
@@ -127,6 +132,11 @@ export const UI = {
 		},
 		theme: { toggle: 'Toggle theme' },
 		lang: { toggle: 'Switch language' },
+		panal: {
+			alt: 'Hexagonal honeycomb where each project owns a region of the map',
+			pista: 'A self-organizing map places these projects on its own, by how much each area weighs in their stack — similar ones end up neighbours. Hover the honeycomb.',
+			pistaTactil: 'A self-organizing map places these projects on its own, by how much each area weighs in their stack — similar ones end up neighbours. Tap a cell to jump to its project.',
+		},
 		sol: {
 			enHabana: 'in Havana',
 			sobre: 'sun {grados}° above the horizon',
