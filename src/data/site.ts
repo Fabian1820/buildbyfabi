@@ -49,11 +49,11 @@ export const PROJECTS: Project[] = [
 		featured: true,
 		year: '2025 — hoy',
 		status: 'live',
+		privateCode: true,
 		image: suncarImg,
 		stack: ['Next.js', 'React', 'TypeScript', 'FastAPI', 'MongoDB', 'Tailwind CSS'],
 		links: {
 			live: 'https://suncarsrl.com',
-			repo: 'https://github.com/Fabian1820/SunCarWeb',
 		},
 		title: { es: 'SunCar', en: 'SunCar' },
 		tagline: {
@@ -87,11 +87,11 @@ export const PROJECTS: Project[] = [
 		slug: 'llego',
 		year: '2026',
 		status: 'live',
+		privateCode: true,
 		image: llegoImg,
 		stack: ['Astro', 'Svelte', 'TypeScript', 'Kotlin'],
 		links: {
 			live: 'https://llegoweb-production.up.railway.app',
-			repo: 'https://github.com/Fabian1820/LlegoBusiness',
 		},
 		title: { es: 'Llegó', en: 'Llegó' },
 		tagline: {
@@ -125,11 +125,11 @@ export const PROJECTS: Project[] = [
 		slug: 'shellbox',
 		year: '2025 — hoy',
 		status: 'live',
+		privateCode: true,
 		image: shellboxImg,
 		stack: ['Astro', 'Svelte', 'TypeScript', 'MongoDB', 'S3'],
 		links: {
 			live: 'https://shellbox.up.railway.app',
-			repo: 'https://github.com/Fabian1820/ShellBox',
 		},
 		title: { es: 'ShellBox Encargos', en: 'ShellBox Encargos' },
 		tagline: {
