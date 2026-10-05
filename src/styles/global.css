@@ -16,13 +16,16 @@
 	--border: #e2ded6;
 	--border-strong: #cfc9bf;
 	/* `accent` rellena (lleva texto blanco encima); `accent-ink` es el tono para texto */
-	--accent: #7c3aed;
-	--accent-ink: #6d28d9;
-	--accent-soft: #ede9fe;
-	--on-accent: #ffffff;
-	/* Estados de proyecto: tonos 700 en claro para que se lean a 12 px */
+	/* Ámbar de fósforo: el color de los monitores de terminal. Rellena con
+	   texto oscuro encima; para texto sobre crema se usa el tono tostado. */
+	--accent: #f5a524;
+	--accent-ink: #8f5200;
+	--accent-soft: #fbefd7;
+	--on-accent: #1a1206;
+	/* Estados de proyecto: tonos 700 en claro para que se lean a 12 px.
+	   «En desarrollo» va en azul para no confundirse con el acento. */
 	--ok: #047857;
-	--warn: #b45309;
+	--warn: #0369a1;
 }
 
 .dark {
@@ -35,12 +38,12 @@
 	--faint: #8b93a1;
 	--border: #222b3a;
 	--border-strong: #344055;
-	--accent: #7c3aed;
-	--accent-ink: #a78bfa;
-	--accent-soft: #1e1b3a;
-	--on-accent: #ffffff;
+	--accent: #ffb000;
+	--accent-ink: #ffb547;
+	--accent-soft: #2a2110;
+	--on-accent: #1a1206;
 	--ok: #34d399;
-	--warn: #fbbf24;
+	--warn: #38bdf8;
 }
 
 @theme inline {
