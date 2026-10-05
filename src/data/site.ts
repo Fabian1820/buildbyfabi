@@ -61,8 +61,8 @@ export const PROJECTS: Project[] = [
 			en: 'Corporate site and internal system for a solar energy company',
 		},
 		description: {
-			es: 'Desarrollo el software de SunCar, empresa de instalación de paneles solares. Construí su sitio corporativo en Next.js y lidero parte del sistema interno de gestión: brigadas y servicios, control de materiales con kardex, fichas de costo y contabilidad, con reportes en PDF y Excel y soporte offline para el trabajo en campo.',
-			en: 'I build the software at SunCar, a solar panel installation company. I developed their corporate site in Next.js and lead part of the internal management system: crews and services, material control with kardex, cost sheets and accounting, with PDF and Excel reports and offline support for fieldwork.',
+			es: 'Desarrollo el software de SunCar, empresa de instalación de paneles solares. Construí su sitio corporativo en Next.js y lidero parte del sistema interno de gestión: brigadas y servicios, inventario de materiales, costos y contabilidad, con reportes en PDF y Excel y soporte offline para el trabajo en campo.',
+			en: 'I build the software at SunCar, a solar panel installation company. I developed their corporate site in Next.js and lead part of the internal management system: crews and services, material inventory, costing and accounting, with PDF and Excel reports and offline support for fieldwork.',
 		},
 	},
 	{
@@ -105,6 +105,7 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'trimio',
+		secondary: true,
 		year: '2026',
 		status: 'wip',
 		privateCode: true,
@@ -143,7 +144,6 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'golazo',
-		secondary: true,
 		year: '2026',
 		status: 'oss',
 		image: golazoImg,

@@ -10,11 +10,12 @@ const ui = t(locale);
 const featured = PROJECTS.filter((p) => p.featured);
 const principales = PROJECTS.filter((p) => !p.featured && !p.secondary);
 const secundarios = PROJECTS.filter((p) => !p.featured && p.secondary);
+const etiquetaMas = `${ui.work.showMore}: ${secundarios.map((p) => p.title[locale]).join(' · ')}`;
 ---
 
 <section id="work" class="scroll-mt-24 border-t border-border">
 	<div class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
-		<SectionHeading eyebrow={ui.work.eyebrow} title={ui.work.title} subtitle={ui.work.subtitle} />
+		<SectionHeading title={ui.work.title} subtitle={ui.work.subtitle} />
 
 		<div class="mt-12 grid gap-5 lg:grid-cols-2">
 			{featured.map((p, i) => <ProjectCard project={p} size="lg" index={i} />)}
@@ -39,13 +40,13 @@ const secundarios = PROJECTS.filter((p) => !p.featured && p.secondary);
 							type="button"
 							aria-expanded="false"
 							aria-controls="mas-proyectos"
-							data-mas={`${ui.work.showMore} (${secundarios.length})`}
+							data-mas={etiquetaMas}
 							data-menos={ui.work.showLess}
-							class="group inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-muted transition-colors hover:border-accent hover:text-text"
+							class="group inline-flex items-center gap-2 rounded-xl border border-border-strong bg-card px-5 py-3 text-sm font-medium text-muted transition-[border-color,color,scale] duration-150 ease-out hover:border-accent-ink hover:text-text motion-safe:active:scale-[0.97]"
 						>
-							<span data-etiqueta>{`${ui.work.showMore} (${secundarios.length})`}</span>
+							<span data-etiqueta>{etiquetaMas}</span>
 							<svg
-								class="h-4 w-4 transition-transform duration-300 group-aria-expanded:rotate-180"
+								class="h-4 w-4 transition-transform duration-200 ease-in-out group-aria-expanded:rotate-180"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
@@ -73,15 +74,30 @@ const secundarios = PROJECTS.filter((p) => !p.featured && p.secondary);
 	if (boton && caja) {
 		const etiqueta = boton.querySelector<HTMLElement>('[data-etiqueta]');
 
+		const mostrar = (abrir: boolean) => {
+			boton.setAttribute('aria-expanded', String(abrir));
+			caja.hidden = !abrir;
+			if (etiqueta) {
+				etiqueta.textContent = (abrir ? boton.dataset.menos : boton.dataset.mas) ?? '';
+			}
+		};
+
 		boton.addEventListener('click', () => {
 			const abierto = boton.getAttribute('aria-expanded') === 'true';
-			boton.setAttribute('aria-expanded', String(!abierto));
-			caja.hidden = abierto;
-			if (etiqueta) {
-				etiqueta.textContent = (abierto ? boton.dataset.mas : boton.dataset.menos) ?? '';
-			}
+			mostrar(!abierto);
 			// Al plegar, el botón puede quedar fuera de la pantalla: se le sigue.
 			if (abierto) boton.scrollIntoView({ block: 'center', behavior: 'smooth' });
 		});
+
+		// Un enlace a un proyecto plegado (el `ls` del terminal) lo despliega antes de saltar.
+		const abrirSiHaceFalta = () => {
+			const destino = location.hash && document.getElementById(location.hash.slice(1));
+			if (destino && caja.contains(destino) && caja.hidden) {
+				mostrar(true);
+				destino.scrollIntoView();
+			}
+		};
+		window.addEventListener('hashchange', abrirSiHaceFalta);
+		abrirSiHaceFalta();
 	}
 </script>

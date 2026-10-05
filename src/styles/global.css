@@ -11,11 +11,17 @@
 	--card: #ffffff;
 	--text: #0a0d14;
 	--muted: #52525b;
-	--faint: #8a8a94;
+	/* ≥4.5:1 sobre card, bg y bg-subtle: se usa en texto pequeño */
+	--faint: #64646d;
 	--border: #e2ded6;
+	--border-strong: #cfc9bf;
+	/* `accent` rellena (lleva texto blanco encima); `accent-ink` es el tono para texto */
 	--accent: #7c3aed;
+	--accent-ink: #6d28d9;
 	--accent-soft: #ede9fe;
-	--glow: 124 58 237;
+	/* Estados de proyecto: tonos 700 en claro para que se lean a 12 px */
+	--ok: #047857;
+	--warn: #b45309;
 }
 
 .dark {
@@ -25,11 +31,14 @@
 	--card: #131824;
 	--text: #f5f5f4;
 	--muted: #a1a1aa;
-	--faint: #6b7280;
-	--border: #1f2937;
-	--accent: #8b5cf6;
+	--faint: #8b93a1;
+	--border: #222b3a;
+	--border-strong: #344055;
+	--accent: #7c3aed;
+	--accent-ink: #a78bfa;
 	--accent-soft: #1e1b3a;
-	--glow: 139 92 246;
+	--ok: #34d399;
+	--warn: #fbbf24;
 }
 
 @theme inline {
@@ -40,20 +49,23 @@
 	--color-muted: var(--muted);
 	--color-faint: var(--faint);
 	--color-border: var(--border);
+	--color-border-strong: var(--border-strong);
 	--color-accent: var(--accent);
+	--color-accent-ink: var(--accent-ink);
 	--color-accent-soft: var(--accent-soft);
+	--color-ok: var(--ok);
+	--color-warn: var(--warn);
 
 	--font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
 	--font-mono: 'Geist Mono Variable', ui-monospace, monospace;
 
-	--animate-marquee: marquee 40s linear infinite;
-	--animate-blink: blink 1.1s step-end infinite;
-	--animate-rise: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
+	/* Dos curvas para todo el sitio: salida fuerte para lo que entra o responde,
+	   entrada-salida para lo que se transforma en pantalla. */
+	--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+	--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
-@keyframes marquee {
-	from { transform: translateX(0); }
-	to { transform: translateX(-50%); }
+	--animate-blink: blink 1.1s step-end infinite;
+	--animate-rise: rise 500ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
 @keyframes blink {
@@ -61,14 +73,19 @@
 	50% { opacity: 0; }
 }
 
+/* Una sola entrada para el hero y para lo que aparece al hacer scroll */
 @keyframes rise {
-	from { opacity: 0; transform: translateY(14px); }
-	to { opacity: 1; transform: translateY(0); }
+	from { opacity: 0; transform: translateY(12px); }
+}
+
+@keyframes fade {
+	from { opacity: 0; }
 }
 
 html {
 	scroll-behavior: smooth;
 	color-scheme: light;
+	scrollbar-color: var(--border-strong) transparent;
 	/* Red de seguridad: ningún adorno debe poder desplazar la página en horizontal.
 	   `clip` en vez de `hidden` para no crear un contenedor de scroll que rompa
 	   `position: sticky` ni el desplazamiento a anclas. */
@@ -83,6 +100,7 @@ body {
 	background-color: var(--bg);
 	color: var(--text);
 	font-family: var(--font-sans);
+	caret-color: var(--accent-ink);
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
 }
@@ -92,41 +110,52 @@ body {
 	color: var(--text);
 }
 
-/* Grid sutil de fondo — textura de "editor" */
-.bg-grid {
-	background-image:
-		linear-gradient(to right, color-mix(in srgb, var(--border) 60%, transparent) 1px, transparent 1px),
-		linear-gradient(to bottom, color-mix(in srgb, var(--border) 60%, transparent) 1px, transparent 1px);
-	background-size: 56px 56px;
+:focus-visible {
+	outline: 2px solid var(--accent-ink);
+	outline-offset: 3px;
+	border-radius: 6px;
 }
 
-/* Logos monocromos que revelan el color de marca al pasar el cursor */
-.tech:hover .tech-logo {
-	color: var(--brand-light);
+h1, h2, h3 {
+	text-wrap: balance;
 }
 
-.dark .tech:hover .tech-logo {
-	color: var(--brand-dark);
+/* Al cambiar de tema todo cambia de golpe y a la vez: si unas cosas se fundieran
+   y otras saltaran, el cambio parecería roto. */
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+	transition: none !important;
+}
+
+/* Logos monocromos que revelan el color de marca al pasar el cursor.
+   Sólo con puntero fino: en táctil el color se quedaba pegado tras el toque. */
+@media (hover: hover) and (pointer: fine) {
+	.tech:hover .tech-logo {
+		color: var(--brand-light);
+	}
+
+	.dark .tech:hover .tech-logo {
+		color: var(--brand-dark);
+	}
 }
 
 /* Entrada al hacer scroll. La clase `js-reveal` la pone el script de <head>
    antes del primer pintado, y sólo si el visitante no pidió menos movimiento:
-   sin JS o con `prefers-reduced-motion`, nada se esconde. */
-.js-reveal [data-reveal] {
+   sin JS o con `prefers-reduced-motion`, nada se esconde.
+   Es una animación y no una transición a propósito: una transición aquí
+   pisaba las `transition-colors` de las tarjetas y el hover saltaba. */
+.js-reveal [data-reveal]:not(.revelado) {
 	opacity: 0;
-	transform: translateY(18px);
 }
 
 .js-reveal [data-reveal].revelado {
-	opacity: 1;
-	transform: none;
-	transition:
-		opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-		transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-	transition-delay: calc(var(--reveal-i, 0) * 80ms);
+	animation: rise 500ms var(--ease-out) both;
+	animation-delay: calc(min(var(--reveal-i, 0), 5) * 60ms);
 }
 
-/* Cursor que acompaña al comando mientras se escribe */
+/* Cursor que acompaña al comando mientras se escribe: fijo, como en un
+   terminal de verdad; sólo parpadea el del prompt en reposo. */
 .term-txt.typing::after {
 	content: '';
 	display: inline-block;
@@ -134,36 +163,108 @@ body {
 	height: 1em;
 	margin-left: 2px;
 	transform: translateY(2px);
-	background-color: var(--accent);
-	animation: blink 1.1s step-end infinite;
+	background-color: var(--accent-ink);
 }
 
-/* Barra de navegación: el borde vive siempre, sólo cambia de color.
-   Evita que `transition` interpole desde `currentColor` y dibuje una línea clara. */
-#site-nav {
-	border-bottom: 1px solid transparent;
-	transition: background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s;
-}
-
-#site-nav[data-scrolled='true'] {
+/* Barra de navegación. El fondo desenfocado vive en una capa propia que sólo
+   cambia de opacidad: animar `backdrop-filter` re-desenfocaba todo lo de
+   detrás en cada frame, justo mientras se hace scroll. */
+#site-nav::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
 	background-color: color-mix(in srgb, var(--bg) 82%, transparent);
-	border-bottom-color: var(--border);
+	border-bottom: 1px solid var(--border);
 	backdrop-filter: blur(16px);
+	opacity: 0;
+	transition: opacity 200ms ease;
 }
 
-.mask-fade-b {
-	mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+#site-nav[data-scrolled='true']::before {
+	opacity: 1;
 }
 
-.mask-fade-x {
-	mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+/* Menú móvil: entra desde la cabecera; al cerrar desaparece sin más. */
+#mobile-menu {
+	transition:
+		opacity 180ms var(--ease-out),
+		translate 180ms var(--ease-out);
 }
 
+@starting-style {
+	#mobile-menu {
+		opacity: 0;
+		translate: 0 -4px;
+	}
+}
+
+/* Diálogo de credenciales y su fondo */
+dialog.credencial {
+	opacity: 0;
+	scale: 0.96;
+	transition:
+		opacity 150ms var(--ease-out),
+		scale 150ms var(--ease-out),
+		overlay 150ms allow-discrete,
+		display 150ms allow-discrete;
+}
+
+dialog.credencial[open] {
+	opacity: 1;
+	scale: 1;
+	transition-duration: 200ms;
+}
+
+@starting-style {
+	dialog.credencial[open] {
+		opacity: 0;
+		scale: 0.96;
+	}
+}
+
+dialog.credencial::backdrop {
+	background-color: rgb(0 0 0 / 0);
+	transition:
+		background-color 150ms ease,
+		overlay 150ms allow-discrete,
+		display 150ms allow-discrete;
+}
+
+dialog.credencial[open]::backdrop {
+	background-color: rgb(0 0 0 / 0.7);
+	transition-duration: 200ms;
+}
+
+@starting-style {
+	dialog.credencial[open]::backdrop {
+		background-color: rgb(0 0 0 / 0);
+	}
+}
+
+/* Menos movimiento no es cero movimiento: se quitan los desplazamientos y lo
+   que se repite, y se conservan los fundidos de color y opacidad. */
 @media (prefers-reduced-motion: reduce) {
-	*, *::before, *::after {
-		animation-duration: 0.01ms !important;
-		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
-		scroll-behavior: auto !important;
+	html {
+		scroll-behavior: auto;
+	}
+
+	.animate-rise {
+		animation-name: fade;
+	}
+
+	.animate-blink,
+	.animate-ping,
+	.term-caret {
+		animation: none;
+	}
+
+	dialog.credencial,
+	dialog.credencial[open] {
+		scale: 1;
+	}
+
+	#mobile-menu {
+		translate: none;
 	}
 }

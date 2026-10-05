@@ -5,6 +5,11 @@ import { SITE } from '../../data/site';
 const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
 const year = new Date().getFullYear();
+
+const enlaces = [
+	{ label: 'GitHub', href: SITE.github },
+	{ label: 'Instagram', href: SITE.instagram },
+];
 ---
 
 <footer class="border-t border-border">
@@ -13,23 +18,23 @@ const year = new Date().getFullYear();
 	>
 		<div class="flex flex-col gap-1">
 			<span class="font-mono text-sm text-text">{SITE.domain}</span>
-			<span class="text-xs text-faint">
-				© {year} {SITE.name}. {ui.footer.rights}
-			</span>
+			<span class="text-xs text-faint">© {year} {SITE.name}</span>
 		</div>
 
-		<div class="flex items-center gap-4 text-xs text-faint">
-			<span class="font-mono">
-				{ui.footer.built} <span class="text-accent">Astro</span> + <span class="text-accent">Tailwind</span>
-			</span>
-			<a
-				href={SITE.github}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="transition-colors hover:text-text"
-			>
-				GitHub
-			</a>
+		<div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+			{
+				enlaces.map((e) => (
+					<a
+						href={e.href}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="py-2 underline decoration-transparent underline-offset-4 transition-colors duration-150 hover:text-text hover:decoration-border-strong"
+					>
+						{e.label}
+					</a>
+				))
+			}
+			<span class="text-xs text-faint">{ui.footer.built} Astro + Tailwind</span>
 		</div>
 	</div>
 </footer>

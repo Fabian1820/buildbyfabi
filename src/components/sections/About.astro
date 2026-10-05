@@ -15,9 +15,9 @@ const facts = [
 ];
 ---
 
-<section id="about" class="scroll-mt-24 border-t border-border">
+<section id="about" class="scroll-mt-24 border-t border-border bg-bg-subtle">
 	<div class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
-		<SectionHeading eyebrow={ui.about.eyebrow} title={ui.about.title} />
+		<SectionHeading title={ui.about.title} />
 
 		<div class="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-16">
 			<div data-reveal class="min-w-0 space-y-5 text-base leading-relaxed text-muted">
@@ -36,11 +36,11 @@ const facts = [
 					class="mx-auto h-44 w-44 rounded-full border border-border object-cover sm:h-52 sm:w-52"
 				/>
 
-				<dl class="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border">
+				<dl class="grid grid-cols-2 gap-x-6 gap-y-4 border-y border-border py-5">
 					{
 						facts.map((f) => (
-							<div class="bg-card px-4 py-3.5">
-								<dt class="font-mono text-[11px] uppercase tracking-wider text-faint">{f.k}</dt>
+							<div>
+								<dt class="text-xs text-faint">{f.k}</dt>
 								<dd class="mt-1 text-sm text-text">{f.v}</dd>
 							</div>
 						))
@@ -48,7 +48,7 @@ const facts = [
 				</dl>
 
 				<div>
-					<h3 class="font-mono text-[11px] uppercase tracking-wider text-faint">
+					<h3 class="text-xs text-faint">
 						{ui.about.credentials}
 					</h3>
 					<div class="mt-3 space-y-2">
@@ -57,9 +57,10 @@ const facts = [
 								<button
 									type="button"
 									data-credential={c.slug}
-									class="group flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left transition-colors hover:border-accent"
+									aria-haspopup="dialog"
+									class="group flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left transition-[border-color,scale] duration-150 ease-out hover:border-border-strong motion-safe:active:scale-[0.99]"
 								>
-									<svg class="h-4 w-4 shrink-0 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<svg class="h-4 w-4 shrink-0 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 										<path d="M12 2 3 6l9 4 9-4-9-4Z" />
 										<path d="M3 12l9 4 9-4M3 18l9 4 9-4" />
 									</svg>
@@ -69,8 +70,8 @@ const facts = [
 											{c.issuer[locale]} · {c.year}
 										</span>
 									</span>
-									<svg class="h-4 w-4 shrink-0 text-faint transition-colors group-hover:text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-										<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+									<svg class="h-4 w-4 shrink-0 text-faint transition-colors duration-150 group-hover:text-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+										<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
 									</svg>
 								</button>
 							))
@@ -85,25 +86,26 @@ const facts = [
 		CREDENTIALS.map((c) => (
 			<dialog
 				id={`dlg-${c.slug}`}
-				class="m-auto w-[min(92vw,900px)] rounded-2xl border border-border bg-card p-0 backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+				aria-labelledby={`dlg-${c.slug}-titulo`}
+				class="credencial m-auto w-[min(92vw,900px)] rounded-2xl border border-border bg-card p-0 text-text"
 			>
 				<div class="flex items-center justify-between border-b border-border px-5 py-3">
 					<div class="min-w-0">
-						<p class="truncate text-sm text-text">{c.title[locale]}</p>
+						<p id={`dlg-${c.slug}-titulo`} class="truncate text-sm text-text">{c.title[locale]}</p>
 						<p class="truncate text-xs text-faint">{c.issuer[locale]}</p>
 					</div>
 					<button
 						type="button"
 						data-close={c.slug}
 						aria-label={ui.about.closeCredential}
-						class="ml-4 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border text-muted transition-colors hover:border-accent hover:text-text"
+						class="ml-4 grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-border text-muted transition-[border-color,color,scale] duration-150 ease-out hover:border-border-strong hover:text-text motion-safe:active:scale-[0.97]"
 					>
 						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
 							<path d="M18 6 6 18M6 6l12 12" />
 						</svg>
 					</button>
 				</div>
-				<img src={c.image} alt={c.title[locale]} class="max-h-[75vh] w-full bg-bg-subtle object-contain" />
+				<img src={c.image} alt={c.title[locale]} loading="lazy" decoding="async" class="max-h-[75vh] w-full bg-bg-subtle object-contain" />
 			</dialog>
 		))
 	}

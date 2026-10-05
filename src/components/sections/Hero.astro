@@ -1,24 +1,24 @@
 ---
 import Terminal from '../ui/Terminal.astro';
 import { getLocale, t, localePath, TERMINAL, type Locale } from '../../i18n/ui';
-import { SITE } from '../../data/site';
+import { SITE, PROJECTS } from '../../data/site';
 
 const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
 const base = localePath(locale, '/');
-const steps = TERMINAL[locale];
+const [rolA, rolB] = ui.hero.role.split(' · ');
+
+// `ls` lista los proyectos reales y cada uno salta a su tarjeta.
+const steps = TERMINAL[locale].map((step) =>
+	step.list === 'projects'
+		? { ...step, links: PROJECTS.map((p) => ({ label: p.slug, href: `#proyecto-${p.slug}` })) }
+		: step
+);
 ---
 
-<section class="relative overflow-hidden">
-	<div class="pointer-events-none absolute inset-0 bg-grid mask-fade-b opacity-50" aria-hidden="true"></div>
-	<div
-		class="pointer-events-none absolute left-1/2 top-[-10%] h-[420px] w-full max-w-[820px] -translate-x-1/2 rounded-full bg-accent/10 blur-[120px]"
-		aria-hidden="true"
-	>
-	</div>
-
-	<div class="relative mx-auto max-w-6xl px-5 pb-20 pt-28 sm:px-8 sm:pb-28 sm:pt-36">
-		<div class="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14">
+<section class="relative">
+	<div class="mx-auto max-w-6xl px-5 pb-16 pt-28 sm:px-8 sm:pb-24 sm:pt-36">
+		<div class="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14">
 			<div class="min-w-0 animate-rise">
 				<div class="flex items-center gap-3">
 					<img
@@ -35,20 +35,24 @@ const steps = TERMINAL[locale];
 						class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted"
 					>
 						<span class="relative flex h-2 w-2">
-							<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60"></span>
-							<span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+							<span class="absolute inline-flex h-full w-full rounded-full bg-ok opacity-60 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_3]"></span>
+							<span class="relative inline-flex h-2 w-2 rounded-full bg-ok"></span>
 						</span>
 						{ui.hero.available}
 					</span>
 				</div>
 
-				<h1 class="mt-7 text-[2.6rem] font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+				<h1 class="mt-7 text-[2.35rem] font-semibold leading-[1.05] tracking-tight sm:text-6xl">
 					Fabián<br /><span class="text-muted">Fernández Gálvez</span>
 				</h1>
 
-				<p class="mt-4 font-mono text-sm text-accent">{ui.hero.role}</p>
+				<p class="mt-4 text-base font-medium text-text">
+					<span class="whitespace-nowrap">{rolA}</span>
+					<span class="text-faint" aria-hidden="true"> · </span>
+					<span class="whitespace-nowrap">{rolB}</span>
+				</p>
 
-				<p class="mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
+				<p class="mt-4 max-w-md text-base leading-relaxed text-muted sm:text-lg">
 					{ui.hero.tagline}
 				</p>
 
@@ -56,23 +60,23 @@ const steps = TERMINAL[locale];
 					<a
 						href={SITE.cv[locale]}
 						download
-						class="group inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-medium text-white transition-[filter,box-shadow] hover:brightness-110 hover:shadow-lg hover:shadow-accent/25"
+						class="group inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-medium text-white transition-[filter,box-shadow,scale] duration-150 ease-out hover:brightness-110 hover:shadow-[0_8px_20px_-8px_var(--color-accent)] motion-safe:active:scale-[0.97]"
 					>
-						<svg class="h-4 w-4 transition-transform group-hover:translate-y-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<svg class="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-y-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 							<path d="M12 3v12M7 12l5 5 5-5M5 21h14"></path>
 						</svg>
 						{ui.hero.ctaCv}
 					</a>
 					<a
 						href={`${base}#contact`}
-						class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-text transition-colors hover:border-accent"
+						class="inline-flex items-center gap-2 rounded-xl border border-border-strong bg-card px-5 py-3 text-sm font-medium text-text transition-[border-color,scale] duration-150 ease-out hover:border-accent-ink motion-safe:active:scale-[0.97]"
 					>
 						{ui.hero.ctaContact}
 					</a>
 				</div>
 			</div>
 
-			<div class="min-w-0 animate-rise [animation-delay:120ms]">
+			<div class="min-w-0 animate-rise [animation-delay:80ms]">
 				<Terminal user="fabian" host="buildbyfabi" steps={steps} />
 			</div>
 		</div>
