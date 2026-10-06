@@ -1,7 +1,8 @@
 ---
 import Terminal from '../ui/Terminal.astro';
 import { getLocale, t, localePath, TERMINAL, type Locale } from '../../i18n/ui';
-import { SITE, PROJECTS } from '../../data/site';
+import { SITE, PROJECTS, STACK } from '../../data/site';
+import type { DatosConsola } from '../../lib/consola';
 
 const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
@@ -14,6 +15,31 @@ const steps = TERMINAL[locale].map((step) =>
 		? { ...step, links: PROJECTS.map((p) => ({ label: p.slug, href: `#proyecto-${p.slug}` })) }
 		: step
 );
+
+// Lo que sabe responder la consola sale de los mismos datos que la página.
+const datos: DatosConsola = {
+	yo: {
+		nombre: SITE.name,
+		rol: ui.hero.role,
+		lugar: `${SITE.location[locale]} · ${ui.contact.timezone}`,
+		email: SITE.email,
+		whatsapp: SITE.whatsappDisplay,
+		whatsappHref: SITE.whatsapp,
+		github: SITE.github,
+	},
+	proyectos: PROJECTS.map((p) => ({
+		slug: p.slug,
+		titulo: p.title[locale],
+		tagline: p.tagline[locale],
+		estado: p.status ? ui.work.status[p.status] : '',
+		stack: p.stack,
+		vivo: p.links?.live,
+		repo: p.links?.repo,
+	})),
+	stack: STACK.map((g) => ({ label: g.label[locale], items: g.items.map((i) => i.name) })),
+	textos: { ...ui.consola, ayuda: { ...ui.consola.ayuda } },
+};
+const consola = { datos, cv: SITE.cv[locale], etiqueta: ui.consola.etiqueta, pista: ui.consola.pista };
 ---
 
 <section class="relative">
@@ -77,7 +103,7 @@ const steps = TERMINAL[locale].map((step) =>
 			</div>
 
 			<div class="min-w-0 animate-rise [animation-delay:80ms]">
-				<Terminal user="fabian" host="buildbyfabi" steps={steps} />
+				<Terminal user="fabian" host="buildbyfabi" steps={steps} consola={consola} />
 			</div>
 		</div>
 	</div>

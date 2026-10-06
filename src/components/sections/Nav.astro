@@ -118,7 +118,9 @@ const links = [
 		root.classList.add('theme-switching');
 		const dark = root.classList.toggle('dark');
 		themeBtn.setAttribute('aria-pressed', String(dark));
-		localStorage.setItem('theme', dark ? 'dark' : 'light');
+		try {
+			localStorage.setItem('theme', dark ? 'dark' : 'light');
+		} catch {}
 		// Forzar el cálculo de estilos aplica el tema nuevo sin transiciones;
 		// después ya se pueden volver a encender.
 		void getComputedStyle(root).color;

@@ -78,17 +78,19 @@ const jsonLd = {
 		<meta name="twitter:description" content={pageDesc} />
 		<meta name="twitter:image" content={ogImage} />
 
-		<meta name="theme-color" content="#0a0d14" media="(prefers-color-scheme: dark)" />
-		<meta name="theme-color" content="#f7f5f1" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#0a0d14" />
 
 		<script is:inline set:html={JSON.stringify(jsonLd)} type="application/ld+json" />
 
 		{/* Evita el flash de tema incorrecto: corre antes del primer paint */}
 		<script is:inline>
 			(() => {
-				const stored = localStorage.getItem('theme');
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				const dark = stored ? stored === 'dark' : prefersDark;
+				let stored = null;
+				try {
+					stored = localStorage.getItem('theme');
+				} catch {}
+				// Abre en oscuro salvo que el visitante haya elegido el claro.
+				const dark = stored ? stored === 'dark' : true;
 				document.documentElement.classList.toggle('dark', dark);
 
 				// Marca el documento antes de pintar para que lo revelable nazca
