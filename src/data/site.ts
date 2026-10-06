@@ -104,25 +104,6 @@ export const PROJECTS: Project[] = [
 		},
 	},
 	{
-		slug: 'trimio',
-		secondary: true,
-		year: '2026',
-		status: 'wip',
-		privateCode: true,
-		image: trimioImg,
-		stack: ['Nuxt', 'Vue', 'FastAPI', 'MongoDB'],
-		links: { live: 'https://trimio-frontend-production.up.railway.app' },
-		title: { es: 'Trimio', en: 'Trimio' },
-		tagline: {
-			es: 'SaaS de reservas para barberías',
-			en: 'Booking SaaS for barbershops',
-		},
-		description: {
-			es: 'Plataforma de reservas online para barberías: cada negocio tiene su página pública con su marca, sus servicios y sus horarios, y el barbero gestiona citas, equipo y galería desde su panel. Producto propio, con demo abierta y en desarrollo activo.',
-			en: 'Online booking platform for barbershops: each business gets a public page with its own brand, services and opening hours, while the barber manages appointments, staff and gallery from a dashboard. My own product, with an open demo and in active development.',
-		},
-	},
-	{
 		slug: 'shellbox',
 		year: '2025 — hoy',
 		status: 'live',
@@ -143,7 +124,26 @@ export const PROJECTS: Project[] = [
 		},
 	},
 	{
+		slug: 'trimio',
+		year: '2026',
+		status: 'wip',
+		privateCode: true,
+		image: trimioImg,
+		stack: ['Nuxt', 'Vue', 'FastAPI', 'MongoDB'],
+		links: { live: 'https://trimio-frontend-production.up.railway.app' },
+		title: { es: 'Trimio', en: 'Trimio' },
+		tagline: {
+			es: 'SaaS de reservas para barberías',
+			en: 'Booking SaaS for barbershops',
+		},
+		description: {
+			es: 'Plataforma de reservas online para barberías: cada negocio tiene su página pública con su marca, sus servicios y sus horarios, y el barbero gestiona citas, equipo y galería desde su panel. Producto propio, con demo abierta y en desarrollo activo.',
+			en: 'Online booking platform for barbershops: each business gets a public page with its own brand, services and opening hours, while the barber manages appointments, staff and gallery from a dashboard. My own product, with an open demo and in active development.',
+		},
+	},
+	{
 		slug: 'golazo',
+		secondary: true,
 		year: '2026',
 		status: 'oss',
 		image: golazoImg,
@@ -197,7 +197,6 @@ export const STACK: {
 			{ name: 'Nuxt', icon: 'nuxt' },
 			{ name: 'TypeScript', icon: 'typescript' },
 			{ name: 'Tailwind CSS', icon: 'tailwindcss' },
-			{ name: 'shadcn/ui', icon: 'shadcnui' },
 		],
 	},
 	{
