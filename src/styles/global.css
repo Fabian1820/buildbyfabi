@@ -146,6 +146,105 @@ h1, h2, h3 {
 	}
 }
 
+/* ---------- Constelación del stack ---------- */
+.constelacion {
+	height: auto;
+	overflow: visible;
+}
+
+.constelacion text {
+	font-family: var(--font-sans);
+	font-size: 14px;
+	fill: var(--muted);
+	transition: fill 150ms ease, opacity 150ms ease;
+}
+
+.constelacion .nodo-proy text {
+	font-size: 15px;
+	font-weight: 600;
+	fill: var(--text);
+}
+
+.constelacion .nodo {
+	cursor: pointer;
+	outline: none;
+}
+
+.constelacion .nodo-zona {
+	fill: transparent;
+}
+
+.constelacion .nodo-punto {
+	fill: var(--faint);
+	transition: fill 150ms ease, opacity 150ms ease;
+}
+
+.constelacion .nodo-proy .nodo-punto {
+	fill: var(--accent);
+}
+
+.constelacion .arista {
+	fill: none;
+	stroke: var(--border-strong);
+	stroke-width: 1;
+	opacity: 0.7;
+	transition: opacity 150ms ease, stroke 150ms ease;
+}
+
+/* Con un nodo activo: lo suyo se enciende, el resto se apaga */
+.constelacion[data-activo] .arista {
+	opacity: 0.12;
+}
+
+.constelacion[data-activo] .arista.on {
+	opacity: 1;
+	stroke: var(--accent);
+	stroke-width: 1.5;
+}
+
+.constelacion[data-activo] .nodo text,
+.constelacion[data-activo] .nodo .nodo-punto {
+	opacity: 0.3;
+}
+
+.constelacion[data-activo] .nodo.on text,
+.constelacion[data-activo] .nodo.on .nodo-punto {
+	opacity: 1;
+}
+
+.constelacion[data-activo] .nodo-tech.on text {
+	fill: var(--text);
+}
+
+.constelacion[data-activo] .nodo-tech.on .nodo-punto {
+	fill: var(--accent);
+}
+
+.constelacion .nodo:focus-visible .nodo-zona {
+	stroke: var(--accent-ink);
+	stroke-width: 1.5;
+}
+
+/* Al entrar en pantalla, las aristas se trazan una vez */
+@keyframes trazar {
+	from {
+		stroke-dashoffset: 1;
+	}
+}
+
+.revelado .constelacion .arista {
+	stroke-dasharray: 1;
+	stroke-dashoffset: 0;
+	animation: trazar 900ms var(--ease-out) both;
+	animation-delay: 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.revelado .constelacion .arista {
+		animation: none;
+	}
+}
+
 /* Entrada al hacer scroll. La clase `js-reveal` la pone el script de <head>
    antes del primer pintado, y sólo si el visitante no pidió menos movimiento:
    sin JS o con `prefers-reduced-motion`, nada se esconde.

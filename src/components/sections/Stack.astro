@@ -1,94 +1,248 @@
 ---
-import * as si from 'simple-icons';
 import { getLocale, t, type Locale } from '../../i18n/ui';
-import { STACK } from '../../data/site';
+import { PROJECTS } from '../../data/site';
+import { STACK_CON_USOS } from '../../lib/usos';
+import { iconoDe, estiloMarca } from '../../lib/marca';
 import SectionHeading from '../ui/SectionHeading.astro';
 
 const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
 
-type Icon = { title: string; hex: string; path: string };
+const textos = {
+	es: {
+		pista: 'Pasa el cursor (o toca) una tecnología o un proyecto para ver sus conexiones.',
+		diario: 'A diario, sin proyecto en esta página',
+	},
+	en: {
+		pista: 'Hover (or tap) a technology or a project to see its connections.',
+		diario: 'Daily use, not in a project on this page',
+	},
+}[locale];
 
-const iconFor = (slug: string): Icon | null => {
-	const key = 'si' + slug.charAt(0).toUpperCase() + slug.slice(1);
-	return ((si as unknown as Record<string, Icon>)[key]) ?? null;
+const clave = (n: string) => n.toLowerCase().replace(/[\s.]/g, '');
+
+// Tecnologías conectadas: las del stack con algún proyecto, más las que salen
+// en las tarjetas sin estar en el stack declarado.
+const declaradas = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => i.proyectos.length).map((i) => i.name));
+const extra = [...new Set(PROJECTS.flatMap((p) => p.stack))].filter(
+	(n) => !STACK_CON_USOS.some((g) => g.items.some((i) => clave(i.name) === clave(n)))
+);
+const techs = [...declaradas, ...extra];
+const corto: Record<string, string> = { 'gemelo-digital': 'Gemelo digital', shellbox: 'ShellBox', 'panal-som': 'Panal SOM' };
+const todos = PROJECTS.map((p) => ({ slug: p.slug, nombre: corto[p.slug] ?? p.title[locale], stack: p.stack.map(clave) }));
+
+// Orden de los proyectos: el que deja juntos a los que comparten tecnologías,
+// para que se crucen menos líneas. Con 7 proyectos se prueban todas las
+// permutaciones (5 040) al compilar; no cuesta nada en el navegador.
+const comparten = (a: (typeof todos)[number], b: (typeof todos)[number]) => a.stack.filter((x) => b.stack.includes(x)).length;
+function* permutaciones<T>(xs: T[]): Generator<T[]> {
+	if (xs.length <= 1) return yield xs;
+	for (let i = 0; i < xs.length; i++)
+		for (const resto of permutaciones([...xs.slice(0, i), ...xs.slice(i + 1)])) yield [xs[i], ...resto];
+}
+const coste = (orden: typeof todos, circular: boolean) => {
+	let c = 0;
+	for (let i = 0; i < orden.length; i++)
+		for (let j = i + 1; j < orden.length; j++) {
+			let d = j - i;
+			if (circular) d = Math.min(d, orden.length - d);
+			c += comparten(orden[i], orden[j]) * d;
+		}
+	return c;
 };
+const mejorOrden = (circular: boolean) => {
+	let mejor = todos, min = Infinity;
+	// El primero se fija: las rotaciones dan el mismo dibujo.
+	for (const resto of permutaciones(todos.slice(1))) {
+		const o = [todos[0], ...resto];
+		const c = coste(o, circular);
+		if (c < min) [min, mejor] = [c, o];
+	}
+	return mejor;
+};
+const proyectos = mejorOrden(true);
+const aristas = techs.flatMap((tName, ti) =>
+	proyectos.flatMap((p, pi) => (p.stack.includes(clave(tName)) ? [{ ti, pi }] : []))
+);
 
-/* Muchas marcas son negras (Next.js, Vercel, shadcn) o casi blancas.
-   Ajustamos la luminancia para que el color de marca se lea en ambos temas. */
-const rgb = (hex: string) => [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
-const lum = (hex: string) => {
-	const [r, g, b] = rgb(hex).map((v) => {
-		const s = v / 255;
-		return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+// Media de una lista de números; para ordenar cada tecnología cerca de sus proyectos.
+const media = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
+
+type P = { x: number; y: number };
+type Plano = { w: number; h: number; proy: P[]; tech: (P & { ancla: 'start' | 'end' })[] };
+
+/** Escritorio: proyectos en una elipse interior, tecnologías en la exterior. */
+function planoAncho(): Plano {
+	const w = 1000, h = 600, cx = w / 2, cy = h / 2;
+	const angP = proyectos.map((_, i) => -Math.PI / 2 + (i / proyectos.length) * Math.PI * 2);
+	const proy = angP.map((a) => ({ x: cx + 190 * Math.cos(a), y: cy + 120 * Math.sin(a) }));
+
+	// Ángulo medio (circular) de los proyectos de cada tecnología, y reparto uniforme en ese orden.
+	const deseado = techs.map((_, ti) => {
+		const as = aristas.filter((e) => e.ti === ti).map((e) => angP[e.pi]);
+		return Math.atan2(media(as.map(Math.sin)), media(as.map(Math.cos)));
 	});
-	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
-const mix = (hex: string, target: number[], amount: number) =>
-	'#' +
-	rgb(hex)
-		.map((v, i) => Math.round(v + (target[i] - v) * amount))
-		.map((v) => v.toString(16).padStart(2, '0'))
-		.join('');
+	const orden = techs.map((_, i) => i).sort((a, b) => deseado[a] - deseado[b]);
+	const tech: Plano['tech'] = new Array(techs.length);
+	orden.forEach((ti, k) => {
+		const a = deseado[orden[0]] + (k / techs.length) * Math.PI * 2;
+		const x = cx + 400 * Math.cos(a);
+		tech[ti] = { x, y: cy + 250 * Math.sin(a), ancla: x >= cx ? 'start' : 'end' };
+	});
+	return { w, h, proy, tech };
+}
 
-const brandFor = (hex: string) => {
-	const l = lum(hex);
-	// `hex` viene de simple-icons sin almohadilla: sin ella la variable CSS es
-	// inválida y el logo se queda gris al pasar el cursor.
-	return {
-		light: l > 0.72 ? mix(hex, [0, 0, 0], 0.45) : `#${hex}`,
-		dark:
-			l < 0.16
-				? mix(hex, [255, 255, 255], 0.78)
-				: l < 0.3
-					? mix(hex, [255, 255, 255], 0.45)
-					: `#${hex}`,
-	};
+/** Móvil: proyectos en una columna central, tecnologías a los lados. */
+function planoAlto(): Plano {
+	const w = 400, paso = 30;
+	const filas = Math.ceil(techs.length / 2);
+	const h = Math.max(filas * paso + 60, proyectos.length * 70 + 60);
+	const proy = proyectos.map((_, i) => ({ x: w / 2, y: 50 + i * ((h - 100) / (proyectos.length - 1)) }));
+	const yMedia = techs.map((_, ti) => media(aristas.filter((e) => e.ti === ti).map((e) => proy[e.pi].y)));
+	const orden = techs.map((_, i) => i).sort((a, b) => yMedia[a] - yMedia[b]);
+	const tech: Plano['tech'] = new Array(techs.length);
+	// Alterna izquierda y derecha siguiendo el orden vertical.
+	const izq = orden.filter((_, k) => k % 2 === 0);
+	const der = orden.filter((_, k) => k % 2 === 1);
+	const colocar = (lista: number[], x: number, ancla: 'start' | 'end') =>
+		lista.forEach((ti, k) => {
+			tech[ti] = { x, y: 40 + k * ((h - 80) / Math.max(1, lista.length - 1)), ancla };
+		});
+	colocar(izq, 100, 'end');
+	colocar(der, 300, 'start');
+	return { w, h, proy, tech };
+}
+
+const planos = [
+	{ clase: 'hidden sm:block', p: planoAncho() },
+	{ clase: 'sm:hidden', p: planoAlto() },
+];
+
+const curva = (a: P, b: P, c: P) => {
+	// Curva hacia el centro: la constelación se lee como un tejido, no como radios.
+	const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+	return `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${(mx + (c.x - mx) * 0.25).toFixed(1)},${(my + (c.y - my) * 0.25).toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
 };
+
+const diario = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => !i.proyectos.length));
 ---
 
 <section id="stack" class="scroll-mt-24 border-t border-border">
 	<div class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
 		<SectionHeading title={ui.stack.title} subtitle={ui.stack.subtitle} />
+		<p class="mt-3 text-sm text-faint">{textos.pista}</p>
 
-		<div class="mt-12 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+		<div data-reveal class="mt-10 overflow-hidden rounded-2xl border border-border bg-card p-2 sm:p-4">
 			{
-				STACK.map((group, i) => (
-					<div data-reveal style={`--reveal-i:${i}`} class="grid gap-4 px-6 py-6 sm:grid-cols-[140px_minmax(0,1fr)] sm:items-center sm:gap-6 sm:px-8">
-						<h3 class="text-sm font-medium text-text">
-							{group.label[locale]}
-						</h3>
-
-						<ul class="flex flex-wrap gap-2">
-							{group.items.map((item) => {
-								const icon = iconFor(item.icon);
-								const brand = icon ? brandFor(icon.hex) : null;
+				planos.map(({ clase, p }) => (
+					<svg
+						class:list={['constelacion w-full', clase]}
+						viewBox={`0 0 ${p.w} ${p.h}`}
+						role="group"
+						aria-label={ui.stack.title}
+						data-constelacion
+					>
+						<g class="aristas" aria-hidden="true">
+							{aristas.map((e) => (
+								<path class="arista" pathLength="1" data-t={e.ti} data-p={e.pi} d={curva(p.tech[e.ti], p.proy[e.pi], { x: p.w / 2, y: p.h / 2 })} />
+							))}
+						</g>
+						<g>
+							{techs.map((nombre, ti) => {
+								const n = p.tech[ti];
+								const dx = n.ancla === 'start' ? 9 : -9;
 								return (
-									<li
-										class="tech group flex items-center gap-2 rounded-xl border border-border bg-bg-subtle px-3 py-2 transition-colors duration-150 hover:border-border-strong hover:bg-card"
-										style={brand ? `--brand-light:${brand.light};--brand-dark:${brand.dark}` : undefined}
-									>
-										{icon && (
-											<svg
-												class="tech-logo h-[18px] w-[18px] shrink-0 text-faint transition-colors duration-150"
-												viewBox="0 0 24 24"
-												fill="currentColor"
-												role="img"
-												aria-hidden="true"
-											>
-												<path d={icon.path} />
-											</svg>
-										)}
-										<span class="text-[13px] text-muted transition-colors duration-150 group-hover:text-text">
-											{item.name}
-										</span>
-									</li>
+									<g class="nodo nodo-tech" data-t={ti} tabindex="0" role="button" aria-label={nombre}>
+										<circle cx={n.x} cy={n.y} r="14" class="nodo-zona" />
+										<circle cx={n.x} cy={n.y} r="3.5" class="nodo-punto" />
+										<text x={n.x + dx} y={n.y} text-anchor={n.ancla} dominant-baseline="central">
+											{nombre}
+										</text>
+									</g>
 								);
 							})}
-						</ul>
-					</div>
+							{proyectos.map((pr, pi) => {
+								const n = p.proy[pi];
+								return (
+									<a href={`#proyecto-${pr.slug}`} class="nodo nodo-proy" data-p={pi}>
+										<circle cx={n.x} cy={n.y} r="18" class="nodo-zona" />
+										<circle cx={n.x} cy={n.y} r="6" class="nodo-punto" />
+										<text x={n.x} y={n.y - 14} text-anchor="middle">
+											{pr.nombre}
+										</text>
+									</a>
+								);
+							})}
+						</g>
+					</svg>
 				))
 			}
 		</div>
+
+		<div data-reveal style="--reveal-i:1" class="mt-6">
+			<p class="text-xs text-faint">{textos.diario}</p>
+			<ul class="mt-3 flex flex-wrap gap-2">
+				{
+					diario.map((item) => {
+						const icon = iconoDe(item.icon);
+						return (
+							<li class="tech group flex items-center gap-2 rounded-xl border border-dashed border-border px-3 py-1.5" style={estiloMarca(icon)}>
+								{icon && (
+									<svg class="tech-logo h-4 w-4 shrink-0 text-faint transition-colors duration-150" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+										<path d={icon.path} />
+									</svg>
+								)}
+								<span class="text-[13px] text-muted">{item.name}</span>
+							</li>
+						);
+					})
+				}
+			</ul>
+		</div>
 	</div>
 </section>
+
+<script>
+	// Al activar un nodo se encienden sus aristas y sus vecinos; el resto se apaga.
+	document.querySelectorAll<SVGSVGElement>('[data-constelacion]').forEach((svg) => {
+		const aristas = Array.from(svg.querySelectorAll<SVGPathElement>('.arista'));
+		const nodos = Array.from(svg.querySelectorAll<SVGElement>('.nodo'));
+
+		const activar = (nodo: SVGElement | null) => {
+			svg.toggleAttribute('data-activo', !!nodo);
+			aristas.forEach((a) => a.classList.remove('on'));
+			nodos.forEach((n) => n.classList.remove('on'));
+			if (!nodo) return;
+			nodo.classList.add('on');
+			const t = nodo.dataset.t;
+			const p = nodo.dataset.p;
+			aristas.forEach((a) => {
+				if ((t !== undefined && a.dataset.t === t) || (p !== undefined && a.dataset.p === p)) {
+					a.classList.add('on');
+					svg.querySelector(t !== undefined ? `.nodo-proy[data-p="${a.dataset.p}"]` : `.nodo-tech[data-t="${a.dataset.t}"]`)?.classList.add('on');
+				}
+			});
+		};
+
+		const fino = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+		nodos.forEach((n) => {
+			// Sólo el foco de teclado: un toque también enfoca y estropearía el doble toque.
+			n.addEventListener('focus', () => n.matches(':focus-visible') && activar(n));
+			n.addEventListener('blur', () => activar(null));
+			if (fino) {
+				n.addEventListener('pointerenter', () => activar(n));
+				n.addEventListener('pointerleave', () => activar(null));
+			}
+		});
+
+		// En táctil: el primer toque en un proyecto enseña sus conexiones;
+		// el segundo sigue el enlace a la tarjeta.
+		if (!fino) {
+			svg.addEventListener('click', (e) => {
+				const nodo = (e.target as Element).closest<SVGElement>('.nodo');
+				if (nodo?.classList.contains('nodo-proy') && !nodo.classList.contains('on')) e.preventDefault();
+				activar(nodo);
+			});
+		}
+	});
+</script>
