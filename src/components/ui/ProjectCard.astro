@@ -23,6 +23,10 @@ const sigla = project.title[locale]
 	.map((w) => w[0].toUpperCase())
 	.join('');
 
+// Años compactos para que el estado y el año quepan junto al título:
+// «2025 — 2026» → «2025–26» y «2025 — hoy» → «2025–hoy».
+const year = project.year.replace(/^(\d{4})\s*—\s*\d{2}(\d{2})$/, '$1–$2').replace(/\s*—\s*/, '–');
+
 const statusTone: Record<string, string> = {
 	live: 'text-ok border-ok/30 bg-ok/10',
 	wip: 'text-warn border-warn/30 bg-warn/10',
@@ -70,13 +74,53 @@ const statusTone: Record<string, string> = {
 			}
 		</div>
 
-		<div class="flex items-start justify-between gap-3">
-			<div class="flex items-center gap-2.5">
+		<!-- Una sola fila: logo y título a la izquierda; estado y año a la derecha.
+		     Si el título es largo y no caben, el estado y el año pasan debajo en vez
+		     de partir el título en dos. -->
+		<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+			<div class="flex min-w-0 items-center gap-2.5">
+				{
+					project.logo ? (
+						<img
+							src={project.logo}
+							alt=""
+							width="144"
+							height="144"
+							loading="lazy"
+							decoding="async"
+							class:list={[
+								'shrink-0 rounded-full border border-border-strong bg-white',
+								lg ? 'h-8 w-8' : 'h-6 w-6',
+							]}
+						/>
+					) : (
+						<span
+							aria-hidden="true"
+							class:list={[
+								'grid shrink-0 place-items-center rounded-full border border-dashed border-border-strong bg-bg-subtle font-semibold text-muted',
+								lg ? 'h-8 w-8 text-xs' : 'h-6 w-6 text-[10px]',
+							]}
+						>
+							{sigla}
+						</span>
+					)
+				}
+				<h3
+					class:list={[
+						'min-w-0 font-semibold tracking-tight text-text',
+						lg ? 'text-2xl' : 'text-lg',
+					]}
+				>
+					{project.title[locale]}
+				</h3>
+			</div>
+
+			<div class="flex shrink-0 items-center gap-2.5">
 				{
 					project.status && (
 						<span
 							class:list={[
-								'rounded-full border px-2.5 py-0.5 text-xs font-medium',
+								'whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium',
 								statusTone[project.status],
 							]}
 						>
@@ -84,45 +128,8 @@ const statusTone: Record<string, string> = {
 						</span>
 					)
 				}
+				<span class="whitespace-nowrap text-xs tabular-nums text-faint">{year}</span>
 			</div>
-			<span class="shrink-0 text-xs tabular-nums text-faint">{project.year}</span>
-		</div>
-
-		<div class="mt-4 flex items-center gap-3">
-			{
-				project.logo ? (
-					<img
-						src={project.logo}
-						alt=""
-						width="144"
-						height="144"
-						loading="lazy"
-						decoding="async"
-						class:list={[
-							'shrink-0 rounded-full border border-border-strong bg-white',
-							lg ? 'h-12 w-12' : 'h-10 w-10',
-						]}
-					/>
-				) : (
-					<span
-						aria-hidden="true"
-						class:list={[
-							'grid shrink-0 place-items-center rounded-full border border-dashed border-border-strong bg-bg-subtle font-semibold text-muted',
-							lg ? 'h-12 w-12 text-base' : 'h-10 w-10 text-sm',
-						]}
-					>
-						{sigla}
-					</span>
-				)
-			}
-			<h3
-				class:list={[
-					'min-w-0 font-semibold tracking-tight text-text',
-					lg ? 'text-2xl' : 'text-lg',
-				]}
-			>
-				{project.title[locale]}
-			</h3>
 		</div>
 
 		<p class="mt-1.5 text-sm font-medium text-muted">{project.tagline[locale]}</p>
@@ -135,16 +142,6 @@ const statusTone: Record<string, string> = {
 		>
 			{project.description[locale]}
 		</p>
-
-		<ul class="mt-6 flex flex-wrap gap-1.5">
-			{
-				project.stack.map((s) => (
-					<li class="rounded-md border border-border px-2 py-0.5 text-xs text-faint">
-						{s}
-					</li>
-				))
-			}
-		</ul>
 
 		{
 			(project.links?.live || project.links?.repo || project.privateCode) && (
