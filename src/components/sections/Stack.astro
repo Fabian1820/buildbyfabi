@@ -55,7 +55,7 @@ const habilidades = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => !i.proye
 // Cada icono se define una vez y se reutiliza con <use>.
 const sprite = [...new Map([...techs, ...habilidades].filter((n) => n.icono).map((n) => [n.slug, n.icono!])).entries()];
 
-const corto: Record<string, string> = { 'gemelo-digital': 'Gemelo digital', shellbox: 'ShellBox', 'panal-som': 'Panal SOM' };
+const corto: Record<string, string> = { 'gemelo-digital': 'Gemelo digital' };
 const iniciales = (n: string) =>
 	n
 		.split(/\s+/)

@@ -118,7 +118,7 @@ export const PROJECTS: Project[] = [
 		links: {
 			live: 'https://shellbox.up.railway.app',
 		},
-		title: { es: 'ShellBox Encargos', en: 'ShellBox Encargos' },
+		title: { es: 'ShellBox', en: 'ShellBox' },
 		tagline: {
 			es: 'Encargos desde Estados Unidos hasta La Habana',
 			en: 'Parcel service from the United States to Havana',
