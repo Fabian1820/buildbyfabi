@@ -15,6 +15,14 @@ const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
 const lg = size === 'lg';
 
+// Sin logo propio no se inventa uno: un monograma con borde discontinuo,
+// el mismo que usa la constelación del stack.
+const sigla = project.title[locale]
+	.split(/\s+/)
+	.slice(0, 2)
+	.map((w) => w[0].toUpperCase())
+	.join('');
+
 const statusTone: Record<string, string> = {
 	live: 'text-ok border-ok/30 bg-ok/10',
 	wip: 'text-warn border-warn/30 bg-warn/10',
@@ -80,14 +88,42 @@ const statusTone: Record<string, string> = {
 			<span class="shrink-0 text-xs tabular-nums text-faint">{project.year}</span>
 		</div>
 
-		<h3
-			class:list={[
-				'mt-4 font-semibold tracking-tight text-text',
-				lg ? 'text-2xl' : 'text-lg',
-			]}
-		>
-			{project.title[locale]}
-		</h3>
+		<div class="mt-4 flex items-center gap-3">
+			{
+				project.logo ? (
+					<img
+						src={project.logo}
+						alt=""
+						width="144"
+						height="144"
+						loading="lazy"
+						decoding="async"
+						class:list={[
+							'shrink-0 rounded-full border border-border-strong bg-white',
+							lg ? 'h-12 w-12' : 'h-10 w-10',
+						]}
+					/>
+				) : (
+					<span
+						aria-hidden="true"
+						class:list={[
+							'grid shrink-0 place-items-center rounded-full border border-dashed border-border-strong bg-bg-subtle font-semibold text-muted',
+							lg ? 'h-12 w-12 text-base' : 'h-10 w-10 text-sm',
+						]}
+					>
+						{sigla}
+					</span>
+				)
+			}
+			<h3
+				class:list={[
+					'min-w-0 font-semibold tracking-tight text-text',
+					lg ? 'text-2xl' : 'text-lg',
+				]}
+			>
+				{project.title[locale]}
+			</h3>
+		</div>
 
 		<p class="mt-1.5 text-sm font-medium text-muted">{project.tagline[locale]}</p>
 

@@ -39,3 +39,22 @@ export const estiloMarca = (icono: Icono | null) => {
 	const c = colorDeMarca(icono.hex);
 	return `--brand-light:${c.light};--brand-dark:${c.dark}`;
 };
+
+/* Nombres de tecnologías que no coinciden con el slug de su icono en simple-icons.
+   Las claves van en minúsculas y sin espacios, puntos ni guiones. */
+const ALIAS: Record<string, string> = {
+	nextjs: 'nextdotjs',
+	nodejs: 'nodedotjs',
+	vue: 'vuedotjs',
+	java: 'openjdk',
+	javafx: 'openjdk',
+	maven: 'apachemaven',
+	junit: 'junit5',
+	claudecode: 'claude',
+};
+
+/** Slug del icono para el nombre de una tecnología tal como sale en las tarjetas. */
+export const slugDeNombre = (nombre: string) => {
+	const k = nombre.toLowerCase().replace(/[\s.\-]/g, '');
+	return ALIAS[k] ?? k.replace(/[^a-z0-9]/g, '');
+};

@@ -177,10 +177,34 @@ h1, h2, h3 {
 	stroke: none;
 }
 
-/* Tecnologías: un punto y su nombre */
+/* Tecnologías: su icono de marca sobre un disco que tapa el final de las líneas */
+.constelacion .tech-disco {
+	fill: var(--card);
+	stroke: var(--border);
+	stroke-width: 1;
+	transition: stroke 150ms ease;
+}
+
+.constelacion .tech-icono {
+	fill: var(--faint);
+	transition: fill 150ms ease;
+}
+
 .constelacion .nodo-punto {
 	fill: var(--faint);
 	transition: fill 150ms ease;
+}
+
+.constelacion .nodo-tech.on .tech-icono {
+	fill: var(--brand-light);
+}
+
+.dark .constelacion .nodo-tech.on .tech-icono {
+	fill: var(--brand-dark);
+}
+
+.constelacion .nodo-tech.on .tech-disco {
+	stroke: var(--accent-draw);
 }
 
 /* Proyectos: su logo en un círculo, con un aro que se enciende */
@@ -217,16 +241,16 @@ h1, h2, h3 {
 	stroke: var(--accent-draw);
 }
 
-/* Habilidades: fichas cuadradas con su icono, en un estante aparte */
+/* Habilidades: fichas con su icono, sobre un brillo de estrella */
 .constelacion .skill-chip {
 	fill: var(--bg-subtle);
 	stroke: var(--border-strong);
-	stroke-width: 1;
+	stroke-width: 1.5;
 	transition: stroke 150ms ease;
 }
 
 .constelacion .skill-icono {
-	fill: var(--faint);
+	fill: var(--muted);
 	transition: fill 150ms ease;
 }
 
@@ -242,21 +266,34 @@ h1, h2, h3 {
 	stroke: var(--accent-draw);
 }
 
-.constelacion .estante-linea {
-	stroke: var(--border);
-	stroke-width: 1;
-	stroke-dasharray: 3 5;
+.constelacion .brillo {
+	pointer-events: none;
+	opacity: 0.55;
+	transition: opacity 150ms ease;
 }
 
-.constelacion .estante-titulo {
-	font-size: 13px;
-	font-weight: 600;
-	fill: var(--text);
+.constelacion .nodo-skill.on .brillo {
+	opacity: 1;
 }
 
-.constelacion .estante-nota {
-	font-size: 12.5px;
+.constelacion .brillo-centro {
+	stop-color: var(--accent);
+	stop-opacity: 0.28;
+}
+
+.constelacion .brillo-borde {
+	stop-color: var(--accent);
+	stop-opacity: 0;
+}
+
+.constelacion .estrella {
 	fill: var(--faint);
+}
+
+/* El dibujo de la figura: más tenue que las conexiones de arriba, que sí significan algo */
+.constelacion .arista-hab {
+	stroke-dasharray: none;
+	opacity: 0.55;
 }
 
 /* Aristas */

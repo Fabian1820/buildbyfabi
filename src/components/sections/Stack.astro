@@ -2,7 +2,7 @@
 import { getLocale, t, type Locale } from '../../i18n/ui';
 import { PROJECTS } from '../../data/site';
 import { STACK_CON_USOS } from '../../lib/usos';
-import { iconoDe, estiloMarca } from '../../lib/marca';
+import { iconoDe, slugDeNombre, estiloMarca, type Icono } from '../../lib/marca';
 import SectionHeading from '../ui/SectionHeading.astro';
 
 const locale: Locale = getLocale(Astro.url);
@@ -29,20 +29,31 @@ const textos = {
 
 const clave = (n: string) => n.toLowerCase().replace(/[\s.]/g, '');
 
+type Nodo = { nombre: string; slug: string; icono: Icono | null };
+const nodo = (nombre: string, slug?: string): Nodo => {
+	const s = slug ?? slugDeNombre(nombre);
+	return { nombre, slug: s, icono: iconoDe(s) };
+};
+
 // Tecnologías conectadas: las del stack con algún proyecto, más las que salen
 // en las tarjetas sin estar en el stack declarado.
-const declaradas = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => i.proyectos.length).map((i) => i.name));
-const extra = [...new Set(PROJECTS.flatMap((p) => p.stack))].filter(
-	(n) => !STACK_CON_USOS.some((g) => g.items.some((i) => clave(i.name) === clave(n)))
-);
+const declaradas = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => i.proyectos.length).map((i) => nodo(i.name, i.icon)));
+const extra = [...new Set(PROJECTS.flatMap((p) => p.stack))]
+	.filter((n) => !STACK_CON_USOS.some((g) => g.items.some((i) => clave(i.name) === clave(n))))
+	.map((n) => nodo(n));
 const techs = [...declaradas, ...extra];
 
-// Habilidades: lo del stack que no sale en ninguna tarjeta. Van aparte y sin
-// conexiones, porque no se las atribuimos a ningún proyecto.
-const habilidades = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => !i.proyectos.length)).map((i) => ({
-	nombre: i.name,
-	icono: iconoDe(i.icon),
-}));
+// Habilidades: lo del stack que no sale en ninguna tarjeta. Tienen su propio
+// cielo y sus líneas son sólo el dibujo de la figura: no dicen que una
+// habilidad se relacione con otra, y a ningún proyecto se le atribuye ninguna.
+const ORDEN = ['Git', 'Docker', 'Claude Code', 'Figma', 'Vercel', 'Railway', 'Node.js', 'Swift'];
+const posicion = (n: string) => (ORDEN.includes(n) ? ORDEN.indexOf(n) : ORDEN.length);
+const habilidades = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => !i.proyectos.length))
+	.map((i) => nodo(i.name, i.icon))
+	.sort((a, b) => posicion(a.nombre) - posicion(b.nombre));
+
+// Cada icono se define una vez y se reutiliza con <use>.
+const sprite = [...new Map([...techs, ...habilidades].filter((n) => n.icono).map((n) => [n.slug, n.icono!])).entries()];
 
 const corto: Record<string, string> = { 'gemelo-digital': 'Gemelo digital', shellbox: 'ShellBox', 'panal-som': 'Panal SOM' };
 const iniciales = (n: string) =>
@@ -65,29 +76,26 @@ function* permutaciones<T>(xs: T[]): Generator<T[]> {
 	for (let i = 0; i < xs.length; i++)
 		for (const resto of permutaciones([...xs.slice(0, i), ...xs.slice(i + 1)])) yield [xs[i], ...resto];
 }
-const coste = (orden: typeof todos, circular: boolean) => {
+const coste = (orden: typeof todos) => {
 	let c = 0;
 	for (let i = 0; i < orden.length; i++)
-		for (let j = i + 1; j < orden.length; j++) {
-			let d = j - i;
-			if (circular) d = Math.min(d, orden.length - d);
-			c += comparten(orden[i], orden[j]) * d;
-		}
+		for (let j = i + 1; j < orden.length; j++)
+			c += comparten(orden[i], orden[j]) * Math.min(j - i, orden.length - (j - i));
 	return c;
 };
-const mejorOrden = (circular: boolean) => {
+const mejorOrden = () => {
 	let mejor = todos, min = Infinity;
 	// El primero se fija: las rotaciones dan el mismo dibujo.
 	for (const resto of permutaciones(todos.slice(1))) {
 		const o = [todos[0], ...resto];
-		const c = coste(o, circular);
+		const c = coste(o);
 		if (c < min) [min, mejor] = [c, o];
 	}
 	return mejor;
 };
-const proyectos = mejorOrden(true);
-const aristas = techs.flatMap((tName, ti) =>
-	proyectos.flatMap((p, pi) => (p.stack.includes(clave(tName)) ? [{ ti, pi }] : []))
+const proyectos = mejorOrden();
+const aristas = techs.flatMap((tec, ti) =>
+	proyectos.flatMap((p, pi) => (p.stack.includes(clave(tec.nombre)) ? [{ ti, pi }] : []))
 );
 
 // Media de una lista de números; para ordenar cada tecnología cerca de sus proyectos.
@@ -97,25 +105,17 @@ type P = { x: number; y: number };
 type Plano = {
 	w: number;
 	h: number;
-	/** Dónde acaba el grafo y empieza el estante de habilidades */
-	hGrafo: number;
 	r: number;
 	/** Los proyectos llevan la etiqueta fuera del círculo o siempre debajo */
 	etiqueta: 'radial' | 'debajo';
 	cy: number;
 	proy: P[];
 	tech: (P & { ancla: 'start' | 'end' })[];
-	skills: (P & { ancho: number })[];
-	titulo: P;
-	/** La nota del estante: a continuación del título o, si no cabe, debajo */
-	nota: P;
 };
 
-const anchoTexto = (s: string) => Math.round(s.length * 7.4);
-
-/** Escritorio: proyectos en una elipse interior, tecnologías en la exterior, habilidades en un estante. */
+/** Escritorio: proyectos en una elipse interior, tecnologías en la exterior. */
 function planoAncho(): Plano {
-	const w = 1000, hGrafo = 600, cx = w / 2, cy = hGrafo / 2;
+	const w = 1000, h = 600, cx = w / 2, cy = h / 2;
 	const angP = proyectos.map((_, i) => -Math.PI / 2 + (i / proyectos.length) * Math.PI * 2);
 	const proy = angP.map((a) => ({ x: cx + 190 * Math.cos(a), y: cy + 120 * Math.sin(a) }));
 
@@ -128,30 +128,18 @@ function planoAncho(): Plano {
 	const tech: Plano['tech'] = new Array(techs.length);
 	orden.forEach((ti, k) => {
 		const a = deseado[orden[0]] + (k / techs.length) * Math.PI * 2;
-		const x = cx + 400 * Math.cos(a);
+		const x = cx + 385 * Math.cos(a);
 		tech[ti] = { x, y: cy + 250 * Math.sin(a), ancla: x >= cx ? 'start' : 'end' };
 	});
-
-	// Estante: una fila repartida por el ancho, con el hueco que sobre entre las piezas.
-	const piezas = habilidades.map((h) => 30 + 10 + anchoTexto(h.nombre));
-	const hueco = Math.max(18, (920 - piezas.reduce((a, b) => a + b, 0)) / Math.max(1, piezas.length - 1));
-	let x = (w - (piezas.reduce((a, b) => a + b, 0) + hueco * (piezas.length - 1))) / 2;
-	const skills = piezas.map((ancho) => {
-		const s = { x: x + 15, y: hGrafo + 74, ancho };
-		x += ancho + hueco;
-		return s;
-	});
-	const titulo = { x: 40, y: hGrafo + 30 };
-	const nota = { x: titulo.x + anchoTexto(textos.habilidades) + 14, y: titulo.y };
-	return { w, h: hGrafo + 100, hGrafo, r: 26, etiqueta: 'radial', cy, proy, tech, skills, titulo, nota };
+	return { w, h, r: 26, etiqueta: 'radial', cy, proy, tech };
 }
 
-/** Móvil: proyectos en una columna central, tecnologías a los lados, habilidades en dos columnas debajo. */
+/** Móvil: proyectos en una columna central y tecnologías a los lados. */
 function planoAlto(): Plano {
-	const w = 400, paso = 30;
+	const w = 400, paso = 32;
 	const filas = Math.ceil(techs.length / 2);
-	const hG = Math.max(filas * paso + 60, proyectos.length * 82 + 60);
-	const proy = proyectos.map((_, i) => ({ x: w / 2, y: 50 + i * ((hG - 110) / (proyectos.length - 1)) }));
+	const h = Math.max(filas * paso + 60, proyectos.length * 82 + 60);
+	const proy = proyectos.map((_, i) => ({ x: w / 2, y: 50 + i * ((h - 110) / (proyectos.length - 1)) }));
 	const yMedia = techs.map((_, ti) => media(aristas.filter((e) => e.ti === ti).map((e) => proy[e.pi].y)));
 	const orden = techs.map((_, i) => i).sort((a, b) => yMedia[a] - yMedia[b]);
 	const tech: Plano['tech'] = new Array(techs.length);
@@ -160,20 +148,11 @@ function planoAlto(): Plano {
 	const der = orden.filter((_, k) => k % 2 === 1);
 	const colocar = (lista: number[], x: number, ancla: 'start' | 'end') =>
 		lista.forEach((ti, k) => {
-			tech[ti] = { x, y: 40 + k * ((hG - 90) / Math.max(1, lista.length - 1)), ancla };
+			tech[ti] = { x, y: 40 + k * ((h - 90) / Math.max(1, lista.length - 1)), ancla };
 		});
-	colocar(izq, 96, 'end');
-	colocar(der, 304, 'start');
-
-	const base = hG + 86;
-	const skills = habilidades.map((h, i) => ({
-		x: 34 + (i % 2) * 180 + 15,
-		y: base + Math.floor(i / 2) * 42,
-		ancho: 30 + 10 + anchoTexto(h.nombre),
-	}));
-	const h = base + Math.ceil(habilidades.length / 2) * 42 + 6;
-	const titulo = { x: 20, y: hG + 28 };
-	return { w, h, hGrafo: hG, r: 23, etiqueta: 'debajo', cy: hG / 2, proy, tech, skills, titulo, nota: { x: titulo.x, y: titulo.y + 20 } };
+	colocar(izq, 100, 'end');
+	colocar(der, 300, 'start');
+	return { w, h, r: 23, etiqueta: 'debajo', cy: h / 2, proy, tech };
 }
 
 const planos = [
@@ -186,6 +165,54 @@ const curva = (a: P, b: P, c: P) => {
 	const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
 	return `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${(mx + (c.x - mx) * 0.25).toFixed(1)},${(my + (c.y - my) * 0.25).toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
 };
+
+// ---------- El cielo de las habilidades ----------
+const nH = habilidades.length;
+// Un dibujo con forma de constelación: una cadena con dos triángulos.
+const lineasHab: [number, number][] = [...Array(Math.max(0, nH - 1))].map((_, i) => [i, i + 1]);
+([[1, 3], [4, 6]] as [number, number][]).forEach(([a, b]) => b < nH && lineasHab.push([a, b]));
+
+type CieloHab = {
+	w: number;
+	h: number;
+	nodos: (P & { lado: 'debajo' | 'izq' | 'der' })[];
+	estrellas: { x: number; y: number; r: number; o: number }[];
+};
+
+/** Estrellas de fondo en posiciones fijas: el mismo cielo en cada compilación. */
+function fondo(w: number, h: number, n: number) {
+	let s = 7;
+	const azar = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
+	return [...Array(n)].map(() => ({ x: azar() * w, y: azar() * h, r: 0.6 + azar() * 0.9, o: 0.15 + azar() * 0.25 }));
+}
+
+function cieloAncho(): CieloHab {
+	const w = 1000, h = 250;
+	const ys = [138, 84, 166, 98, 180, 80, 148, 102];
+	const paso = (w - 160) / Math.max(1, nH - 1);
+	return {
+		w,
+		h,
+		nodos: habilidades.map((_, i) => ({ x: 80 + i * paso, y: ys[i % ys.length], lado: 'debajo' as const })),
+		estrellas: fondo(w, h, 46),
+	};
+}
+
+function cieloAlto(): CieloHab {
+	const w = 400, paso = 66;
+	const h = 36 + Math.max(0, nH - 1) * paso + 44;
+	return {
+		w,
+		h,
+		nodos: habilidades.map((_, i) => ({ x: i % 2 ? 282 : 118, y: 36 + i * paso, lado: i % 2 ? ('der' as const) : ('izq' as const) })),
+		estrellas: fondo(w, h, 40),
+	};
+}
+
+const cielos = [
+	{ clase: 'hidden sm:block', c: cieloAncho(), id: 'a' },
+	{ clase: 'sm:hidden', c: cieloAlto(), id: 'b' },
+];
 ---
 
 <section id="stack" class="scroll-mt-24 border-t border-border">
@@ -199,7 +226,7 @@ const curva = (a: P, b: P, c: P) => {
 				{textos.proyecto}
 			</li>
 			<li class="flex items-center gap-2">
-				<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="3.5" class="fill-faint" /></svg>
+				<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5" class="fill-card stroke-border-strong" stroke-width="1" /><circle cx="9" cy="9" r="2.5" class="fill-faint" /></svg>
 				{textos.tecnologia}
 			</li>
 			<li class="flex items-center gap-2">
@@ -208,6 +235,17 @@ const curva = (a: P, b: P, c: P) => {
 			</li>
 		</ul>
 
+		<!-- Los iconos de marca, definidos una vez -->
+		<svg width="0" height="0" class="absolute" aria-hidden="true" focusable="false">
+			<defs>
+				{sprite.map(([slug, icono]) => (
+					<symbol id={`i-${slug}`} viewBox="0 0 24 24">
+						<path d={icono.path} />
+					</symbol>
+				))}
+			</defs>
+		</svg>
+
 		<div data-reveal class="mt-6 overflow-hidden rounded-2xl border border-border bg-card p-2 sm:p-4">
 			{
 				planos.map(({ clase, p }) => (
@@ -215,7 +253,7 @@ const curva = (a: P, b: P, c: P) => {
 						class:list={['constelacion w-full', clase]}
 						viewBox={`0 0 ${p.w} ${p.h}`}
 						role="group"
-						aria-label={ui.stack.title}
+						aria-label={`${ui.stack.title}: ${textos.proyecto} / ${textos.tecnologia}`}
 						data-constelacion
 					>
 						<g class="aristas" aria-hidden="true">
@@ -225,15 +263,20 @@ const curva = (a: P, b: P, c: P) => {
 						</g>
 
 						<g>
-							{techs.map((nombre, ti) => {
+							{techs.map((tec, ti) => {
 								const n = p.tech[ti];
-								const dx = n.ancla === 'start' ? 9 : -9;
+								const dx = n.ancla === 'start' ? 17 : -17;
 								return (
-									<g class="nodo nodo-tech" data-t={ti} tabindex="0" role="button" aria-label={nombre}>
-										<circle cx={n.x} cy={n.y} r="14" class="nodo-zona" />
-										<circle cx={n.x} cy={n.y} r="3.5" class="nodo-punto" />
+									<g class="nodo nodo-tech" data-t={ti} tabindex="0" role="button" aria-label={tec.nombre} style={estiloMarca(tec.icono)}>
+										<circle cx={n.x} cy={n.y} r="17" class="nodo-zona" />
+										<circle cx={n.x} cy={n.y} r="11" class="tech-disco" />
+										{tec.icono ? (
+											<use href={`#i-${tec.slug}`} x={n.x - 7} y={n.y - 7} width="14" height="14" class="tech-icono" />
+										) : (
+											<circle cx={n.x} cy={n.y} r="3.5" class="nodo-punto" />
+										)}
 										<text x={n.x + dx} y={n.y} text-anchor={n.ancla} dominant-baseline="central">
-											{nombre}
+											{tec.nombre}
 										</text>
 									</g>
 								);
@@ -264,26 +307,67 @@ const curva = (a: P, b: P, c: P) => {
 								);
 							})}
 						</g>
+					</svg>
+				))
+			}
+		</div>
 
-						<!-- Estante de habilidades: aparte, sin conexiones -->
-						<g class="estante">
-							<line x1={p.titulo.x} x2={p.w - p.titulo.x} y1={p.hGrafo + 6} y2={p.hGrafo + 6} class="estante-linea" />
-							<text x={p.titulo.x} y={p.titulo.y + 4} class="estante-titulo">{textos.habilidades}</text>
-							<text x={p.nota.x} y={p.nota.y + 4} class="estante-nota">
-								{textos.habilidadesNota}
-							</text>
+		<!-- Otro cielo: las habilidades, aparte de los proyectos -->
+		<div data-reveal style="--reveal-i:1" class="mt-4 overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-6">
+			<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+				<h3 class="text-sm font-semibold text-text">{textos.habilidades}</h3>
+				<p class="text-sm text-faint">{textos.habilidadesNota}</p>
+			</div>
+
+			{
+				cielos.map(({ clase, c, id }) => (
+					<svg
+						class:list={['constelacion cielo mt-2 w-full', clase]}
+						viewBox={`0 0 ${c.w} ${c.h}`}
+						role="group"
+						aria-label={textos.habilidades}
+						data-constelacion
+					>
+						<defs>
+							<radialGradient id={`brillo-${id}`}>
+								<stop offset="0%" class="brillo-centro" />
+								<stop offset="100%" class="brillo-borde" />
+							</radialGradient>
+						</defs>
+
+						<g aria-hidden="true">
+							{c.estrellas.map((e) => (
+								<circle cx={e.x.toFixed(1)} cy={e.y.toFixed(1)} r={e.r.toFixed(2)} opacity={e.o.toFixed(2)} class="estrella" />
+							))}
+						</g>
+
+						<g class="aristas" aria-hidden="true">
+							{lineasHab.map(([a, b]) => (
+								<line
+									class="arista arista-hab"
+									pathLength="1"
+									data-a={a}
+									data-b={b}
+									x1={c.nodos[a].x}
+									y1={c.nodos[a].y}
+									x2={c.nodos[b].x}
+									y2={c.nodos[b].y}
+								/>
+							))}
+						</g>
+
+						<g>
 							{habilidades.map((h, si) => {
-								const s = p.skills[si];
+								const n = c.nodos[si];
+								const [tx, ta, ty] =
+									n.lado === 'debajo' ? [n.x, 'middle', n.y + 36] : n.lado === 'izq' ? [n.x - 28, 'end', n.y] : [n.x + 28, 'start', n.y];
 								return (
 									<g class="nodo nodo-skill" data-s={si} tabindex="0" role="button" aria-label={`${textos.habilidad}: ${h.nombre}`} style={estiloMarca(h.icono)}>
-										<rect x={s.x - 18} y={s.y - 19} width={s.ancho + 12} height="38" class="nodo-zona" />
-										<rect x={s.x - 15} y={s.y - 15} width="30" height="30" rx="9" class="skill-chip" />
-										{h.icono && (
-											<svg x={s.x - 8} y={s.y - 8} width="16" height="16" viewBox="0 0 24 24">
-												<path d={h.icono.path} class="skill-icono" />
-											</svg>
-										)}
-										<text x={s.x + 25} y={s.y} dominant-baseline="central">
+										<circle cx={n.x} cy={n.y} r="40" class="nodo-zona" />
+										<circle cx={n.x} cy={n.y} r="34" fill={`url(#brillo-${id})`} class="brillo" />
+										<rect x={n.x - 18} y={n.y - 18} width="36" height="36" rx="11" class="skill-chip" />
+										{h.icono && <use href={`#i-${h.slug}`} x={n.x - 10} y={n.y - 10} width="20" height="20" class="skill-icono" />}
+										<text x={tx} y={ty} text-anchor={ta} dominant-baseline="central">
 											{h.nombre}
 										</text>
 									</g>
@@ -298,9 +382,9 @@ const curva = (a: P, b: P, c: P) => {
 </section>
 
 <script>
-	// Al activar un nodo se encienden sus aristas y sus vecinos; el resto se apaga.
+	// Al activar un nodo se encienden sus líneas y sus vecinos; el resto se apaga.
 	document.querySelectorAll<SVGSVGElement>('[data-constelacion]').forEach((svg) => {
-		const aristas = Array.from(svg.querySelectorAll<SVGPathElement>('.arista'));
+		const aristas = Array.from(svg.querySelectorAll<SVGElement>('.arista'));
 		const nodos = Array.from(svg.querySelectorAll<SVGElement>('.nodo'));
 
 		const activar = (nodo: SVGElement | null) => {
@@ -309,12 +393,19 @@ const curva = (a: P, b: P, c: P) => {
 			nodos.forEach((n) => n.classList.remove('on'));
 			if (!nodo) return;
 			nodo.classList.add('on');
-			const t = nodo.dataset.t;
-			const p = nodo.dataset.p;
+			const { t, p, s } = nodo.dataset;
+			const encender = (selector: string) => svg.querySelector(selector)?.classList.add('on');
 			aristas.forEach((a) => {
-				if ((t !== undefined && a.dataset.t === t) || (p !== undefined && a.dataset.p === p)) {
+				const { t: at, p: ap, a: aa, b: ab } = a.dataset;
+				if (t !== undefined && at === t) {
 					a.classList.add('on');
-					svg.querySelector(t !== undefined ? `.nodo-proy[data-p="${a.dataset.p}"]` : `.nodo-tech[data-t="${a.dataset.t}"]`)?.classList.add('on');
+					encender(`.nodo-proy[data-p="${ap}"]`);
+				} else if (p !== undefined && ap === p) {
+					a.classList.add('on');
+					encender(`.nodo-tech[data-t="${at}"]`);
+				} else if (s !== undefined && (aa === s || ab === s)) {
+					a.classList.add('on');
+					encender(`.nodo-skill[data-s="${aa === s ? ab : aa}"]`);
 				}
 			});
 		};
