@@ -26,6 +26,8 @@
 	   «En desarrollo» va en azul para no confundirse con el acento. */
 	--ok: #047857;
 	--warn: #0369a1;
+	/* Para líneas y puntos (necesitan 3:1, no 4,5:1): el ámbar solo no llega sobre fondo claro */
+	--accent-draw: color-mix(in srgb, var(--accent) 50%, var(--accent-ink));
 }
 
 .dark {
@@ -152,37 +154,112 @@ h1, h2, h3 {
 	overflow: visible;
 }
 
+/* Todas las etiquetas con un halo del color del fondo: se leen aunque pase una línea por detrás */
 .constelacion text {
 	font-family: var(--font-sans);
 	font-size: 14px;
 	fill: var(--muted);
-	transition: fill 150ms ease, opacity 150ms ease;
-}
-
-.constelacion .nodo-proy text {
-	font-size: 15px;
-	font-weight: 600;
-	fill: var(--text);
+	paint-order: stroke;
+	stroke: var(--card);
+	stroke-width: 4px;
+	stroke-linejoin: round;
+	transition: fill 150ms ease;
 }
 
 .constelacion .nodo {
 	cursor: pointer;
 	outline: none;
+	transition: opacity 150ms ease;
 }
 
 .constelacion .nodo-zona {
 	fill: transparent;
+	stroke: none;
 }
 
+/* Tecnologías: un punto y su nombre */
 .constelacion .nodo-punto {
 	fill: var(--faint);
-	transition: fill 150ms ease, opacity 150ms ease;
+	transition: fill 150ms ease;
 }
 
-.constelacion .nodo-proy .nodo-punto {
-	fill: var(--accent);
+/* Proyectos: su logo en un círculo, con un aro que se enciende */
+.constelacion .nodo-proy .aro {
+	fill: none;
+	stroke: var(--border-strong);
+	stroke-width: 2;
+	transition: stroke 150ms ease;
 }
 
+.constelacion .nodo-proy .aro-sin-logo {
+	stroke-dasharray: 3 3;
+}
+
+.constelacion .nodo-proy .mono-fondo {
+	fill: var(--bg-subtle);
+}
+
+.constelacion .nodo-proy .mono {
+	font-size: 15px;
+	font-weight: 600;
+	fill: var(--muted);
+	stroke: none;
+	letter-spacing: 0.02em;
+}
+
+.constelacion .etiqueta-proy {
+	font-size: 15px;
+	font-weight: 600;
+	fill: var(--text);
+}
+
+.constelacion .nodo-proy.on .aro {
+	stroke: var(--accent-draw);
+}
+
+/* Habilidades: fichas cuadradas con su icono, en un estante aparte */
+.constelacion .skill-chip {
+	fill: var(--bg-subtle);
+	stroke: var(--border-strong);
+	stroke-width: 1;
+	transition: stroke 150ms ease;
+}
+
+.constelacion .skill-icono {
+	fill: var(--faint);
+	transition: fill 150ms ease;
+}
+
+.constelacion .nodo-skill.on .skill-icono {
+	fill: var(--brand-light);
+}
+
+.dark .constelacion .nodo-skill.on .skill-icono {
+	fill: var(--brand-dark);
+}
+
+.constelacion .nodo-skill.on .skill-chip {
+	stroke: var(--accent-draw);
+}
+
+.constelacion .estante-linea {
+	stroke: var(--border);
+	stroke-width: 1;
+	stroke-dasharray: 3 5;
+}
+
+.constelacion .estante-titulo {
+	font-size: 13px;
+	font-weight: 600;
+	fill: var(--text);
+}
+
+.constelacion .estante-nota {
+	font-size: 12.5px;
+	fill: var(--faint);
+}
+
+/* Aristas */
 .constelacion .arista {
 	fill: none;
 	stroke: var(--border-strong);
@@ -198,18 +275,12 @@ h1, h2, h3 {
 
 .constelacion[data-activo] .arista.on {
 	opacity: 1;
-	stroke: var(--accent);
+	stroke: var(--accent-draw);
 	stroke-width: 1.5;
 }
 
-.constelacion[data-activo] .nodo text,
-.constelacion[data-activo] .nodo .nodo-punto {
+.constelacion[data-activo] .nodo:not(.on) {
 	opacity: 0.3;
-}
-
-.constelacion[data-activo] .nodo.on text,
-.constelacion[data-activo] .nodo.on .nodo-punto {
-	opacity: 1;
 }
 
 .constelacion[data-activo] .nodo-tech.on text {
@@ -217,12 +288,13 @@ h1, h2, h3 {
 }
 
 .constelacion[data-activo] .nodo-tech.on .nodo-punto {
-	fill: var(--accent);
+	fill: var(--accent-draw);
 }
 
 .constelacion .nodo:focus-visible .nodo-zona {
 	stroke: var(--accent-ink);
 	stroke-width: 1.5;
+	rx: 10;
 }
 
 /* Al entrar en pantalla, las aristas se trazan una vez */

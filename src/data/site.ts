@@ -34,6 +34,8 @@ export type Project = {
 	year: string;
 	status?: 'live' | 'wip' | 'oss' | 'private' | 'archived';
 	image?: ImageMetadata;
+	/** Logo del proyecto, ya recortado en círculo (public/images/proyectos). Sin él se pinta un monograma. */
+	logo?: string;
 	/** Marca la tarjeta con «código privado»: explica por qué no hay enlace al repositorio. */
 	privateCode?: boolean;
 	stack: string[];
@@ -46,6 +48,7 @@ export type Project = {
 export const PROJECTS: Project[] = [
 	{
 		slug: 'suncar',
+		logo: '/images/proyectos/logo-suncar.webp',
 		featured: true,
 		year: '2025 — hoy',
 		status: 'live',
@@ -85,6 +88,7 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'llego',
+		logo: '/images/proyectos/logo-llego.webp',
 		year: '2026',
 		status: 'live',
 		privateCode: true,
@@ -105,6 +109,7 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'shellbox',
+		logo: '/images/proyectos/logo-shellbox.webp',
 		year: '2025 — hoy',
 		status: 'live',
 		privateCode: true,
@@ -125,6 +130,7 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'trimio',
+		logo: '/images/proyectos/logo-trimio.webp',
 		year: '2026',
 		status: 'wip',
 		privateCode: true,
@@ -161,6 +167,7 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'panal-som',
+		logo: '/images/proyectos/logo-panal-som.webp',
 		secondary: true,
 		year: '2025 — 2026',
 		status: 'oss',
