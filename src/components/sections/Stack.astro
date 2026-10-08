@@ -16,6 +16,7 @@ const textos = {
 		habilidad: 'Habilidad',
 		habilidades: 'Habilidades',
 		habilidadesNota: 'Las uso a diario, aunque no salgan en ninguna tarjeta.',
+		grupos: { herramientas: 'Herramientas', despliegue: 'Despliegue', lenguajes: 'Lenguajes y entornos', otras: 'Otras' },
 	},
 	en: {
 		pista: 'Hover (or tap) a project, a technology or a skill to see its connections.',
@@ -24,6 +25,7 @@ const textos = {
 		habilidad: 'Skill',
 		habilidades: 'Skills',
 		habilidadesNota: "I use them daily, even if they aren't in any card.",
+		grupos: { herramientas: 'Tools', despliegue: 'Deployment', lenguajes: 'Languages & runtimes', otras: 'Other' },
 	},
 }[locale];
 
@@ -44,13 +46,24 @@ const extra = [...new Set(PROJECTS.flatMap((p) => p.stack))]
 const techs = [...declaradas, ...extra];
 
 // Habilidades: lo del stack que no sale en ninguna tarjeta. Tienen su propio
-// cielo y sus líneas son sólo el dibujo de la figura: no dicen que una
-// habilidad se relacione con otra, y a ningún proyecto se le atribuye ninguna.
-const ORDEN = ['Git', 'Docker', 'Claude Code', 'Figma', 'Vercel', 'Railway', 'Node.js', 'Swift'];
-const posicion = (n: string) => (ORDEN.includes(n) ? ORDEN.indexOf(n) : ORDEN.length);
-const habilidades = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => !i.proyectos.length))
-	.map((i) => nodo(i.name, i.icon))
-	.sort((a, b) => posicion(a.nombre) - posicion(b.nombre));
+// cielo y a ningún proyecto se le atribuye ninguna. Se agrupan por tipo y las
+// líneas unen sólo a las del mismo grupo: lo único que dicen es «son del mismo
+// tipo». Una habilidad que no figure en ningún grupo cae en «otras».
+const GRUPOS = [
+	{ clave: 'herramientas', items: ['Git', 'Docker', 'Claude Code', 'Figma'] },
+	{ clave: 'despliegue', items: ['Vercel', 'Railway'] },
+	{ clave: 'lenguajes', items: ['Node.js', 'Swift'] },
+] as const;
+const sinProyecto = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => !i.proyectos.length)).map((i) => nodo(i.name, i.icon));
+const gruposHab = [
+	...GRUPOS.map((g) => ({
+		clave: g.clave as string,
+		items: g.items.flatMap((n) => sinProyecto.filter((h) => h.nombre === n)),
+	})),
+	{ clave: 'otras', items: sinProyecto.filter((h) => !GRUPOS.some((g) => (g.items as readonly string[]).includes(h.nombre))) },
+].filter((g) => g.items.length);
+// Lista plana en el orden de los grupos: el índice de cada habilidad es global.
+const habilidades = gruposHab.flatMap((g) => g.items);
 
 // Cada icono se define una vez y se reutiliza con <use>.
 const sprite = [...new Map([...techs, ...habilidades].filter((n) => n.icono).map((n) => [n.slug, n.icono!])).entries()];
@@ -167,15 +180,27 @@ const curva = (a: P, b: P, c: P) => {
 };
 
 // ---------- El cielo de las habilidades ----------
-const nH = habilidades.length;
-// Un dibujo con forma de constelación: una cadena con dos triángulos.
-const lineasHab: [number, number][] = [...Array(Math.max(0, nH - 1))].map((_, i) => [i, i + 1]);
-([[1, 3], [4, 6]] as [number, number][]).forEach(([a, b]) => b < nH && lineasHab.push([a, b]));
+// Líneas sólo dentro de cada grupo: una cadena y, si hay margen, un triángulo.
+// Los índices son globales (los de `habilidades`).
+const lineasHab: [number, number][] = [];
+let desde = 0;
+for (const g of gruposHab) {
+	const n = g.items.length;
+	for (let k = 0; k < n - 1; k++) lineasHab.push([desde + k, desde + k + 1]);
+	if (n === 3) lineasHab.push([desde, desde + 2]);
+	if (n >= 4) lineasHab.push([desde + 1, desde + 3]);
+	desde += n;
+}
+const tituloGrupo = (clave: string) => textos.grupos[clave as keyof typeof textos.grupos];
+// A qué grupo pertenece cada habilidad, para decirlo en su etiqueta de accesibilidad.
+const grupoDe = gruposHab.flatMap((g) => g.items.map(() => tituloGrupo(g.clave)));
 
 type CieloHab = {
 	w: number;
 	h: number;
 	nodos: (P & { lado: 'debajo' | 'izq' | 'der' })[];
+	/** Título de cada grupo y la línea que lo subraya */
+	grupos: { titulo: string; x: number; ty: number; ancla: 'middle' | 'start'; x1: number; x2: number; ly: number }[];
 	estrellas: { x: number; y: number; r: number; o: number }[];
 };
 
@@ -186,27 +211,37 @@ function fondo(w: number, h: number, n: number) {
 	return [...Array(n)].map(() => ({ x: azar() * w, y: azar() * h, r: 0.6 + azar() * 0.9, o: 0.15 + azar() * 0.25 }));
 }
 
+/** Escritorio: los grupos en fila, cada uno una figura en zigzag bajo su título. */
 function cieloAncho(): CieloHab {
-	const w = 1000, h = 250;
-	const ys = [138, 84, 166, 98, 180, 80, 148, 102];
-	const paso = (w - 160) / Math.max(1, nH - 1);
-	return {
-		w,
-		h,
-		nodos: habilidades.map((_, i) => ({ x: 80 + i * paso, y: ys[i % ys.length], lado: 'debajo' as const })),
-		estrellas: fondo(w, h, 46),
-	};
+	const w = 1000, h = 236, paso = 115, hueco = 140;
+	const zig = [150, 112, 168, 116];
+	const total = gruposHab.reduce((a, g) => a + (g.items.length - 1) * paso, 0) + (gruposHab.length - 1) * hueco;
+	let x = (w - total) / 2;
+	const nodos: CieloHab['nodos'] = [];
+	const grupos: CieloHab['grupos'] = [];
+	for (const g of gruposHab) {
+		const x2 = x + (g.items.length - 1) * paso;
+		g.items.forEach((_, k) => nodos.push({ x: x + k * paso, y: zig[k % zig.length], lado: 'debajo' }));
+		grupos.push({ titulo: tituloGrupo(g.clave), x: (x + x2) / 2, ty: 34, ancla: 'middle', x1: x - 32, x2: x2 + 32, ly: 48 });
+		x = x2 + hueco;
+	}
+	return { w, h, nodos, grupos, estrellas: fondo(w, h, 46) };
 }
 
+/** Móvil: los grupos apilados, cada uno con su título y sus nodos en zigzag. */
 function cieloAlto(): CieloHab {
-	const w = 400, paso = 66;
-	const h = 36 + Math.max(0, nH - 1) * paso + 44;
-	return {
-		w,
-		h,
-		nodos: habilidades.map((_, i) => ({ x: i % 2 ? 282 : 118, y: 36 + i * paso, lado: i % 2 ? ('der' as const) : ('izq' as const) })),
-		estrellas: fondo(w, h, 40),
-	};
+	const w = 400, paso = 60;
+	let y = 24;
+	const nodos: CieloHab['nodos'] = [];
+	const grupos: CieloHab['grupos'] = [];
+	for (const g of gruposHab) {
+		grupos.push({ titulo: tituloGrupo(g.clave), x: 20, ty: y, ancla: 'start', x1: 20, x2: 380, ly: y + 12 });
+		const y0 = y + 48;
+		g.items.forEach((_, k) => nodos.push({ x: k % 2 ? 282 : 118, y: y0 + k * paso, lado: k % 2 ? 'der' : 'izq' }));
+		y = y0 + (g.items.length - 1) * paso + 54;
+	}
+	const h = y - 10;
+	return { w, h, nodos, grupos, estrellas: fondo(w, h, 40) };
 }
 
 const cielos = [
@@ -341,6 +376,17 @@ const cielos = [
 							))}
 						</g>
 
+						<g aria-hidden="true">
+							{c.grupos.map((g) => (
+								<>
+									<text x={g.x} y={g.ty} text-anchor={g.ancla} class="grupo-titulo">
+										{g.titulo}
+									</text>
+									<line x1={g.x1} x2={g.x2} y1={g.ly} y2={g.ly} class="grupo-linea" />
+								</>
+							))}
+						</g>
+
 						<g class="aristas" aria-hidden="true">
 							{lineasHab.map(([a, b]) => (
 								<line
@@ -362,7 +408,7 @@ const cielos = [
 								const [tx, ta, ty] =
 									n.lado === 'debajo' ? [n.x, 'middle', n.y + 36] : n.lado === 'izq' ? [n.x - 28, 'end', n.y] : [n.x + 28, 'start', n.y];
 								return (
-									<g class="nodo nodo-skill" data-s={si} tabindex="0" role="button" aria-label={`${textos.habilidad}: ${h.nombre}`} style={estiloMarca(h.icono)}>
+									<g class="nodo nodo-skill" data-s={si} tabindex="0" role="button" aria-label={`${textos.habilidad}: ${h.nombre} (${grupoDe[si]})`} style={estiloMarca(h.icono)}>
 										<circle cx={n.x} cy={n.y} r="40" class="nodo-zona" />
 										<circle cx={n.x} cy={n.y} r="34" fill={`url(#brillo-${id})`} class="brillo" />
 										<rect x={n.x - 18} y={n.y - 18} width="36" height="36" rx="11" class="skill-chip" />
