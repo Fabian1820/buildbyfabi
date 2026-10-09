@@ -8,9 +8,9 @@ const other: Locale = locale === 'es' ? 'en' : 'es';
 const base = localePath(locale, '/');
 
 const links = [
+	{ href: `${base}#work`, label: ui.nav.work },
 	{ href: `${base}#about`, label: ui.nav.about },
 	{ href: `${base}#stack`, label: ui.nav.stack },
-	{ href: `${base}#work`, label: ui.nav.work },
 	{ href: `${base}#contact`, label: ui.nav.contact },
 ];
 ---
@@ -21,23 +21,23 @@ const links = [
 	data-scrolled="false"
 >
 	<div
-		class="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 transition-all duration-300 sm:px-8"
+		class="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8"
 	>
 		<a
 			href={base}
-			class="group flex items-center gap-2 font-mono text-sm font-medium tracking-tight"
+			class="group flex items-center gap-2 py-3 font-mono text-sm font-medium tracking-tight"
 		>
-			<span class="text-accent">~/</span>
+			<span class="text-accent-ink">~/</span>
 			<span class="text-text">{SITE.handle}</span>
-			<span class="h-4 w-[2px] bg-accent animate-blink" aria-hidden="true"></span>
 		</a>
 
-		<nav class="hidden items-center gap-1 md:flex" aria-label="Primary">
+		<nav class="hidden items-center gap-1 md:flex" aria-label={ui.nav.primary}>
 			{
 				links.map((l) => (
 					<a
 						href={l.href}
-						class="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-card hover:text-text"
+						data-seccion={l.href.split('#')[1]}
+						class="rounded-lg px-3 py-2 text-sm text-muted transition-colors duration-150 hover:bg-card hover:text-text aria-[current=true]:text-text aria-[current=true]:font-medium"
 					>
 						{l.label}
 					</a>
@@ -47,10 +47,12 @@ const links = [
 
 		<div class="flex items-center gap-1.5">
 			<a
+				id="lang-toggle"
 				href={localePath(other, '/')}
+				hreflang={other}
 				aria-label={ui.lang.toggle}
 				title={ui.lang.toggle}
-				class="rounded-lg border border-border px-2.5 py-1.5 font-mono text-xs font-medium text-muted transition-colors hover:border-accent hover:text-text"
+				class="grid h-11 min-w-11 place-items-center rounded-lg border border-border px-2 font-mono text-xs font-medium text-muted transition-[border-color,color,scale] duration-150 ease-out hover:border-accent-ink hover:text-text motion-safe:active:scale-[0.97] sm:h-9 sm:min-w-9"
 			>
 				{other.toUpperCase()}
 			</a>
@@ -59,8 +61,9 @@ const links = [
 				id="theme-toggle"
 				type="button"
 				aria-label={ui.theme.toggle}
+				aria-pressed="false"
 				title={ui.theme.toggle}
-				class="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted transition-colors hover:border-accent hover:text-text"
+				class="grid h-11 w-11 place-items-center rounded-lg border border-border text-muted transition-[border-color,color,scale] duration-150 ease-out hover:border-accent-ink hover:text-text motion-safe:active:scale-[0.97] sm:h-9 sm:w-9"
 			>
 				<svg class="h-4 w-4 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
 					<circle cx="12" cy="12" r="4"></circle>
@@ -74,10 +77,10 @@ const links = [
 			<button
 				id="menu-toggle"
 				type="button"
-				aria-label="Menu"
+				aria-label={ui.nav.menu}
 				aria-expanded="false"
 				aria-controls="mobile-menu"
-				class="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted transition-colors hover:border-accent hover:text-text md:hidden"
+				class="grid h-11 w-11 place-items-center rounded-lg border border-border text-muted transition-[border-color,color,scale] duration-150 ease-out hover:border-accent-ink hover:text-text motion-safe:active:scale-[0.97] sm:h-9 sm:w-9 md:hidden"
 			>
 				<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
 					<path d="M4 7h16M4 12h16M4 17h16"></path>
@@ -91,12 +94,12 @@ const links = [
 		hidden
 		class="border-t border-border bg-card/95 px-5 py-3 backdrop-blur md:hidden"
 	>
-		<nav class="flex flex-col" aria-label="Mobile">
+		<nav class="flex flex-col" aria-label={ui.nav.menu}>
 			{
 				links.map((l) => (
 					<a
 						href={l.href}
-						class="rounded-lg px-3 py-2.5 text-sm text-muted transition-colors hover:bg-bg-subtle hover:text-text"
+						class="rounded-lg px-3 py-3 text-sm text-muted transition-colors duration-150 hover:bg-bg-subtle hover:text-text"
 					>
 						{l.label}
 					</a>
@@ -107,11 +110,29 @@ const links = [
 </header>
 
 <script>
-	// Tema
+	// Tema. Durante el cambio se apagan las transiciones (ver `.theme-switching`).
+	const root = document.documentElement;
 	const themeBtn = document.getElementById('theme-toggle');
+	themeBtn?.setAttribute('aria-pressed', String(root.classList.contains('dark')));
 	themeBtn?.addEventListener('click', () => {
-		const dark = document.documentElement.classList.toggle('dark');
-		localStorage.setItem('theme', dark ? 'dark' : 'light');
+		root.classList.add('theme-switching');
+		const dark = root.classList.toggle('dark');
+		themeBtn.setAttribute('aria-pressed', String(dark));
+		try {
+			localStorage.setItem('theme', dark ? 'dark' : 'light');
+		} catch {}
+		// Forzar el cálculo de estilos aplica el tema nuevo sin transiciones;
+		// después ya se pueden volver a encender.
+		void getComputedStyle(root).color;
+		root.classList.remove('theme-switching');
+	});
+
+	// Cambiar de idioma conserva la sección en la que estabas.
+	const langBtn = document.getElementById('lang-toggle') as HTMLAnchorElement | null;
+	langBtn?.addEventListener('click', (e) => {
+		if (!location.hash) return;
+		e.preventDefault();
+		location.href = langBtn.href.split('#')[0] + location.hash;
 	});
 
 	// Menú móvil
@@ -143,4 +164,21 @@ const links = [
 	};
 	onScroll();
 	window.addEventListener('scroll', onScroll, { passive: true });
+
+	// Sección actual marcada en el nav
+	const navLinks = document.querySelectorAll<HTMLAnchorElement>('[data-seccion]');
+	if (navLinks.length && 'IntersectionObserver' in window) {
+		const marcar = (id: string) =>
+			navLinks.forEach((a) => a.setAttribute('aria-current', String(a.dataset.seccion === id)));
+		const io = new IntersectionObserver(
+			(entradas) => {
+				for (const e of entradas) if (e.isIntersecting) marcar(e.target.id);
+			},
+			{ rootMargin: '-45% 0px -50% 0px' }
+		);
+		navLinks.forEach((a) => {
+			const sec = a.dataset.seccion && document.getElementById(a.dataset.seccion);
+			if (sec) io.observe(sec);
+		});
+	}
 </script>

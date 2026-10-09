@@ -1,94 +1,488 @@
 ---
-import * as si from 'simple-icons';
 import { getLocale, t, type Locale } from '../../i18n/ui';
-import { STACK } from '../../data/site';
+import { PROJECTS } from '../../data/site';
+import { STACK_CON_USOS } from '../../lib/usos';
+import { iconoDe, slugDeNombre, estiloMarca, type Icono } from '../../lib/marca';
 import SectionHeading from '../ui/SectionHeading.astro';
 
 const locale: Locale = getLocale(Astro.url);
 const ui = t(locale);
 
-type Icon = { title: string; hex: string; path: string };
+const textos = {
+	es: {
+		pista: 'Pasa el cursor (o toca) un proyecto, una tecnología o una habilidad para ver sus conexiones.',
+		proyecto: 'Proyecto',
+		tecnologia: 'Tecnología',
+		habilidad: 'Habilidad',
+		habilidades: 'Habilidades',
+		habilidadesNota: 'Las uso a diario, aunque no salgan en ninguna tarjeta.',
+		grupos: { herramientas: 'Herramientas', despliegue: 'Despliegue', lenguajes: 'Lenguajes y entornos', otras: 'Otras' },
+	},
+	en: {
+		pista: 'Hover (or tap) a project, a technology or a skill to see its connections.',
+		proyecto: 'Project',
+		tecnologia: 'Technology',
+		habilidad: 'Skill',
+		habilidades: 'Skills',
+		habilidadesNota: "I use them daily, even if they aren't in any card.",
+		grupos: { herramientas: 'Tools', despliegue: 'Deployment', lenguajes: 'Languages & runtimes', otras: 'Other' },
+	},
+}[locale];
 
-const iconFor = (slug: string): Icon | null => {
-	const key = 'si' + slug.charAt(0).toUpperCase() + slug.slice(1);
-	return ((si as unknown as Record<string, Icon>)[key]) ?? null;
+const clave = (n: string) => n.toLowerCase().replace(/[\s.]/g, '');
+
+type Nodo = { nombre: string; slug: string; icono: Icono | null };
+const nodo = (nombre: string, slug?: string): Nodo => {
+	const s = slug ?? slugDeNombre(nombre);
+	return { nombre, slug: s, icono: iconoDe(s) };
 };
 
-/* Muchas marcas son negras (Next.js, Vercel, shadcn) o casi blancas.
-   Ajustamos la luminancia para que el color de marca se lea en ambos temas. */
-const rgb = (hex: string) => [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
-const lum = (hex: string) => {
-	const [r, g, b] = rgb(hex).map((v) => {
-		const s = v / 255;
-		return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-	});
-	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
-const mix = (hex: string, target: number[], amount: number) =>
-	'#' +
-	rgb(hex)
-		.map((v, i) => Math.round(v + (target[i] - v) * amount))
-		.map((v) => v.toString(16).padStart(2, '0'))
+// Tecnologías conectadas: las del stack con algún proyecto, más las que salen
+// en las tarjetas sin estar en el stack declarado.
+const declaradas = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => i.proyectos.length).map((i) => nodo(i.name, i.icon)));
+const extra = [...new Set(PROJECTS.flatMap((p) => p.stack))]
+	.filter((n) => !STACK_CON_USOS.some((g) => g.items.some((i) => clave(i.name) === clave(n))))
+	.map((n) => nodo(n));
+const techs = [...declaradas, ...extra];
+
+// Habilidades: lo del stack que no sale en ninguna tarjeta. Tienen su propio
+// cielo y a ningún proyecto se le atribuye ninguna. Se agrupan por tipo y las
+// líneas unen sólo a las del mismo grupo: lo único que dicen es «son del mismo
+// tipo». Una habilidad que no figure en ningún grupo cae en «otras».
+const GRUPOS = [
+	{ clave: 'herramientas', items: ['Git', 'Docker', 'Claude Code', 'Figma'] },
+	{ clave: 'despliegue', items: ['Vercel', 'Railway'] },
+	{ clave: 'lenguajes', items: ['Node.js', 'Swift'] },
+] as const;
+const sinProyecto = STACK_CON_USOS.flatMap((g) => g.items.filter((i) => !i.proyectos.length)).map((i) => nodo(i.name, i.icon));
+const gruposHab = [
+	...GRUPOS.map((g) => ({
+		clave: g.clave as string,
+		items: g.items.flatMap((n) => sinProyecto.filter((h) => h.nombre === n)),
+	})),
+	{ clave: 'otras', items: sinProyecto.filter((h) => !GRUPOS.some((g) => (g.items as readonly string[]).includes(h.nombre))) },
+].filter((g) => g.items.length);
+// Lista plana en el orden de los grupos: el índice de cada habilidad es global.
+const habilidades = gruposHab.flatMap((g) => g.items);
+
+// Cada icono se define una vez y se reutiliza con <use>.
+const sprite = [...new Map([...techs, ...habilidades].filter((n) => n.icono).map((n) => [n.slug, n.icono!])).entries()];
+
+const corto: Record<string, string> = { 'gemelo-digital': 'Gemelo digital' };
+const iniciales = (n: string) =>
+	n
+		.split(/\s+/)
+		.slice(0, 2)
+		.map((w) => w[0].toUpperCase())
 		.join('');
+const todos = PROJECTS.map((p) => {
+	const nombre = corto[p.slug] ?? p.title[locale];
+	return { slug: p.slug, nombre, logo: p.logo, sigla: iniciales(nombre), stack: p.stack.map(clave) };
+});
 
-const brandFor = (hex: string) => {
-	const l = lum(hex);
-	// `hex` viene de simple-icons sin almohadilla: sin ella la variable CSS es
-	// inválida y el logo se queda gris al pasar el cursor.
-	return {
-		light: l > 0.72 ? mix(hex, [0, 0, 0], 0.45) : `#${hex}`,
-		dark:
-			l < 0.16
-				? mix(hex, [255, 255, 255], 0.78)
-				: l < 0.3
-					? mix(hex, [255, 255, 255], 0.45)
-					: `#${hex}`,
-	};
+// Orden de los proyectos: el que deja juntos a los que comparten tecnologías,
+// para que se crucen menos líneas. Con 7 proyectos se prueban todas las
+// permutaciones (5 040) al compilar; no cuesta nada en el navegador.
+const comparten = (a: (typeof todos)[number], b: (typeof todos)[number]) => a.stack.filter((x) => b.stack.includes(x)).length;
+function* permutaciones<T>(xs: T[]): Generator<T[]> {
+	if (xs.length <= 1) return yield xs;
+	for (let i = 0; i < xs.length; i++)
+		for (const resto of permutaciones([...xs.slice(0, i), ...xs.slice(i + 1)])) yield [xs[i], ...resto];
+}
+const coste = (orden: typeof todos) => {
+	let c = 0;
+	for (let i = 0; i < orden.length; i++)
+		for (let j = i + 1; j < orden.length; j++)
+			c += comparten(orden[i], orden[j]) * Math.min(j - i, orden.length - (j - i));
+	return c;
 };
+const mejorOrden = () => {
+	let mejor = todos, min = Infinity;
+	// El primero se fija: las rotaciones dan el mismo dibujo.
+	for (const resto of permutaciones(todos.slice(1))) {
+		const o = [todos[0], ...resto];
+		const c = coste(o);
+		if (c < min) [min, mejor] = [c, o];
+	}
+	return mejor;
+};
+const proyectos = mejorOrden();
+const aristas = techs.flatMap((tec, ti) =>
+	proyectos.flatMap((p, pi) => (p.stack.includes(clave(tec.nombre)) ? [{ ti, pi }] : []))
+);
+
+// Media de una lista de números; para ordenar cada tecnología cerca de sus proyectos.
+const media = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
+
+type P = { x: number; y: number };
+type Plano = {
+	w: number;
+	h: number;
+	r: number;
+	/** Los proyectos llevan la etiqueta fuera del círculo o siempre debajo */
+	etiqueta: 'radial' | 'debajo';
+	cy: number;
+	proy: P[];
+	tech: (P & { ancla: 'start' | 'end' })[];
+};
+
+/** Escritorio: proyectos en una elipse interior, tecnologías en la exterior. */
+function planoAncho(): Plano {
+	const w = 1000, h = 600, cx = w / 2, cy = h / 2;
+	const angP = proyectos.map((_, i) => -Math.PI / 2 + (i / proyectos.length) * Math.PI * 2);
+	const proy = angP.map((a) => ({ x: cx + 190 * Math.cos(a), y: cy + 120 * Math.sin(a) }));
+
+	// Ángulo medio (circular) de los proyectos de cada tecnología, y reparto uniforme en ese orden.
+	const deseado = techs.map((_, ti) => {
+		const as = aristas.filter((e) => e.ti === ti).map((e) => angP[e.pi]);
+		return Math.atan2(media(as.map(Math.sin)), media(as.map(Math.cos)));
+	});
+	const orden = techs.map((_, i) => i).sort((a, b) => deseado[a] - deseado[b]);
+	const tech: Plano['tech'] = new Array(techs.length);
+	orden.forEach((ti, k) => {
+		const a = deseado[orden[0]] + (k / techs.length) * Math.PI * 2;
+		const x = cx + 385 * Math.cos(a);
+		tech[ti] = { x, y: cy + 250 * Math.sin(a), ancla: x >= cx ? 'start' : 'end' };
+	});
+	return { w, h, r: 26, etiqueta: 'radial', cy, proy, tech };
+}
+
+/** Móvil: proyectos en una columna central y tecnologías a los lados. */
+function planoAlto(): Plano {
+	const w = 400, paso = 32;
+	const filas = Math.ceil(techs.length / 2);
+	const h = Math.max(filas * paso + 60, proyectos.length * 82 + 60);
+	const proy = proyectos.map((_, i) => ({ x: w / 2, y: 50 + i * ((h - 110) / (proyectos.length - 1)) }));
+	const yMedia = techs.map((_, ti) => media(aristas.filter((e) => e.ti === ti).map((e) => proy[e.pi].y)));
+	const orden = techs.map((_, i) => i).sort((a, b) => yMedia[a] - yMedia[b]);
+	const tech: Plano['tech'] = new Array(techs.length);
+	// Alterna izquierda y derecha siguiendo el orden vertical.
+	const izq = orden.filter((_, k) => k % 2 === 0);
+	const der = orden.filter((_, k) => k % 2 === 1);
+	const colocar = (lista: number[], x: number, ancla: 'start' | 'end') =>
+		lista.forEach((ti, k) => {
+			tech[ti] = { x, y: 40 + k * ((h - 90) / Math.max(1, lista.length - 1)), ancla };
+		});
+	colocar(izq, 100, 'end');
+	colocar(der, 300, 'start');
+	return { w, h, r: 23, etiqueta: 'debajo', cy: h / 2, proy, tech };
+}
+
+const planos = [
+	{ clase: 'hidden sm:block', p: planoAncho() },
+	{ clase: 'sm:hidden', p: planoAlto() },
+];
+
+const curva = (a: P, b: P, c: P) => {
+	// Curva hacia el centro: la constelación se lee como un tejido, no como radios.
+	const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+	return `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${(mx + (c.x - mx) * 0.25).toFixed(1)},${(my + (c.y - my) * 0.25).toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+};
+
+// ---------- El cielo de las habilidades ----------
+// Líneas sólo dentro de cada grupo: una cadena y, si hay margen, un triángulo.
+// Los índices son globales (los de `habilidades`).
+const lineasHab: [number, number][] = [];
+let desde = 0;
+for (const g of gruposHab) {
+	const n = g.items.length;
+	for (let k = 0; k < n - 1; k++) lineasHab.push([desde + k, desde + k + 1]);
+	if (n === 3) lineasHab.push([desde, desde + 2]);
+	if (n >= 4) lineasHab.push([desde + 1, desde + 3]);
+	desde += n;
+}
+const tituloGrupo = (clave: string) => textos.grupos[clave as keyof typeof textos.grupos];
+// A qué grupo pertenece cada habilidad, para decirlo en su etiqueta de accesibilidad.
+const grupoDe = gruposHab.flatMap((g) => g.items.map(() => tituloGrupo(g.clave)));
+
+type CieloHab = {
+	w: number;
+	h: number;
+	nodos: (P & { lado: 'debajo' | 'izq' | 'der' })[];
+	/** Título de cada grupo y la línea que lo subraya */
+	grupos: { titulo: string; x: number; ty: number; ancla: 'middle' | 'start'; x1: number; x2: number; ly: number }[];
+	estrellas: { x: number; y: number; r: number; o: number }[];
+};
+
+/** Estrellas de fondo en posiciones fijas: el mismo cielo en cada compilación. */
+function fondo(w: number, h: number, n: number) {
+	let s = 7;
+	const azar = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
+	return [...Array(n)].map(() => ({ x: azar() * w, y: azar() * h, r: 0.6 + azar() * 0.9, o: 0.15 + azar() * 0.25 }));
+}
+
+/** Escritorio: los grupos en fila, cada uno una figura en zigzag bajo su título. */
+function cieloAncho(): CieloHab {
+	const w = 1000, h = 236, paso = 115, hueco = 140;
+	const zig = [150, 112, 168, 116];
+	const total = gruposHab.reduce((a, g) => a + (g.items.length - 1) * paso, 0) + (gruposHab.length - 1) * hueco;
+	let x = (w - total) / 2;
+	const nodos: CieloHab['nodos'] = [];
+	const grupos: CieloHab['grupos'] = [];
+	for (const g of gruposHab) {
+		const x2 = x + (g.items.length - 1) * paso;
+		g.items.forEach((_, k) => nodos.push({ x: x + k * paso, y: zig[k % zig.length], lado: 'debajo' }));
+		grupos.push({ titulo: tituloGrupo(g.clave), x: (x + x2) / 2, ty: 34, ancla: 'middle', x1: x - 32, x2: x2 + 32, ly: 48 });
+		x = x2 + hueco;
+	}
+	return { w, h, nodos, grupos, estrellas: fondo(w, h, 46) };
+}
+
+/** Móvil: los grupos apilados, cada uno con su título y sus nodos en zigzag. */
+function cieloAlto(): CieloHab {
+	const w = 400, paso = 60;
+	let y = 24;
+	const nodos: CieloHab['nodos'] = [];
+	const grupos: CieloHab['grupos'] = [];
+	for (const g of gruposHab) {
+		grupos.push({ titulo: tituloGrupo(g.clave), x: 20, ty: y, ancla: 'start', x1: 20, x2: 380, ly: y + 12 });
+		const y0 = y + 48;
+		g.items.forEach((_, k) => nodos.push({ x: k % 2 ? 282 : 118, y: y0 + k * paso, lado: k % 2 ? 'der' : 'izq' }));
+		y = y0 + (g.items.length - 1) * paso + 54;
+	}
+	const h = y - 10;
+	return { w, h, nodos, grupos, estrellas: fondo(w, h, 40) };
+}
+
+const cielos = [
+	{ clase: 'hidden sm:block', c: cieloAncho(), id: 'a' },
+	{ clase: 'sm:hidden', c: cieloAlto(), id: 'b' },
+];
 ---
 
-<section id="stack" class="scroll-mt-24 border-t border-border bg-bg-subtle">
+<section id="stack" class="scroll-mt-24 border-t border-border">
 	<div class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
-		<SectionHeading eyebrow={ui.stack.eyebrow} title={ui.stack.title} subtitle={ui.stack.subtitle} />
+		<SectionHeading title={ui.stack.title} subtitle={ui.stack.subtitle} />
+		<p class="mt-3 max-w-2xl text-sm text-faint">{textos.pista}</p>
 
-		<div class="mt-12 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+		<ul class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
+			<li class="flex items-center gap-2">
+				<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5" class="fill-white stroke-border-strong" stroke-width="1.5" /><circle cx="9" cy="9" r="2.5" class="fill-accent" /></svg>
+				{textos.proyecto}
+			</li>
+			<li class="flex items-center gap-2">
+				<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5" class="fill-card stroke-border-strong" stroke-width="1" /><circle cx="9" cy="9" r="2.5" class="fill-faint" /></svg>
+				{textos.tecnologia}
+			</li>
+			<li class="flex items-center gap-2">
+				<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="2" width="14" height="14" rx="4.5" class="fill-bg-subtle stroke-border-strong" stroke-width="1.5" /></svg>
+				{textos.habilidad}
+			</li>
+		</ul>
+
+		<!-- Los iconos de marca, definidos una vez -->
+		<svg width="0" height="0" class="absolute" aria-hidden="true" focusable="false">
+			<defs>
+				{sprite.map(([slug, icono]) => (
+					<symbol id={`i-${slug}`} viewBox="0 0 24 24">
+						<path d={icono.path} />
+					</symbol>
+				))}
+			</defs>
+		</svg>
+
+		<div data-reveal class="mt-6 overflow-hidden rounded-2xl border border-border bg-card p-2 sm:p-4">
 			{
-				STACK.map((group, i) => (
-					<div data-reveal style={`--reveal-i:${i}`} class="grid gap-4 px-6 py-6 sm:grid-cols-[140px_minmax(0,1fr)] sm:items-center sm:gap-6 sm:px-8">
-						<h3 class="font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
-							{group.label[locale]}
-						</h3>
+				planos.map(({ clase, p }) => (
+					<svg
+						class:list={['constelacion w-full', clase]}
+						viewBox={`0 0 ${p.w} ${p.h}`}
+						role="group"
+						aria-label={`${ui.stack.title}: ${textos.proyecto} / ${textos.tecnologia}`}
+						data-constelacion
+					>
+						<g class="aristas" aria-hidden="true">
+							{aristas.map((e) => (
+								<path class="arista" pathLength="1" data-t={e.ti} data-p={e.pi} d={curva(p.tech[e.ti], p.proy[e.pi], { x: p.w / 2, y: p.cy })} />
+							))}
+						</g>
 
-						<ul class="flex flex-wrap gap-2">
-							{group.items.map((item) => {
-								const icon = iconFor(item.icon);
-								const brand = icon ? brandFor(icon.hex) : null;
+						<g>
+							{techs.map((tec, ti) => {
+								const n = p.tech[ti];
+								const dx = n.ancla === 'start' ? 17 : -17;
 								return (
-									<li
-										class="tech group flex items-center gap-2 rounded-xl border border-border bg-bg-subtle px-3 py-2 transition-colors hover:border-accent/60 hover:bg-card"
-										style={brand ? `--brand-light:${brand.light};--brand-dark:${brand.dark}` : undefined}
-									>
-										{icon && (
-											<svg
-												class="tech-logo h-[18px] w-[18px] shrink-0 text-faint transition-colors"
-												viewBox="0 0 24 24"
-												fill="currentColor"
-												role="img"
-												aria-hidden="true"
-											>
-												<path d={icon.path} />
-											</svg>
+									<g class="nodo nodo-tech" data-t={ti} tabindex="0" role="button" aria-label={tec.nombre} style={estiloMarca(tec.icono)}>
+										<circle cx={n.x} cy={n.y} r="17" class="nodo-zona" />
+										<circle cx={n.x} cy={n.y} r="11" class="tech-disco" />
+										{tec.icono ? (
+											<use href={`#i-${tec.slug}`} x={n.x - 7} y={n.y - 7} width="14" height="14" class="tech-icono" />
+										) : (
+											<circle cx={n.x} cy={n.y} r="3.5" class="nodo-punto" />
 										)}
-										<span class="text-[13px] text-muted transition-colors group-hover:text-text">
-											{item.name}
-										</span>
-									</li>
+										<text x={n.x + dx} y={n.y} text-anchor={n.ancla} dominant-baseline="central">
+											{tec.nombre}
+										</text>
+									</g>
 								);
 							})}
-						</ul>
-					</div>
+
+							{proyectos.map((pr, pi) => {
+								const n = p.proy[pi];
+								const arriba = p.etiqueta === 'radial' && n.y < p.cy - 1;
+								const ly = p.etiqueta === 'debajo' ? n.y + p.r + 16 : arriba ? n.y - p.r - 9 : n.y + p.r + 18;
+								return (
+									<a href={`#proyecto-${pr.slug}`} class="nodo nodo-proy" data-p={pi} aria-label={pr.nombre}>
+										<circle cx={n.x} cy={n.y} r={p.r + 10} class="nodo-zona" />
+										{pr.logo ? (
+											<image href={pr.logo} x={n.x - p.r + 1} y={n.y - p.r + 1} width={2 * p.r - 2} height={2 * p.r - 2} />
+										) : (
+											<>
+												<circle cx={n.x} cy={n.y} r={p.r - 1} class="mono-fondo" />
+												<text x={n.x} y={n.y} text-anchor="middle" dominant-baseline="central" class="mono">
+													{pr.sigla}
+												</text>
+											</>
+										)}
+										<circle cx={n.x} cy={n.y} r={p.r} class:list={['aro', !pr.logo && 'aro-sin-logo']} />
+										<text x={n.x} y={ly} text-anchor="middle" class="etiqueta-proy">
+											{pr.nombre}
+										</text>
+									</a>
+								);
+							})}
+						</g>
+					</svg>
+				))
+			}
+		</div>
+
+		<!-- Otro cielo: las habilidades, aparte de los proyectos -->
+		<div data-reveal style="--reveal-i:1" class="mt-4 overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-6">
+			<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+				<h3 class="text-sm font-semibold text-text">{textos.habilidades}</h3>
+				<p class="text-sm text-faint">{textos.habilidadesNota}</p>
+			</div>
+
+			{
+				cielos.map(({ clase, c, id }) => (
+					<svg
+						class:list={['constelacion cielo mt-2 w-full', clase]}
+						viewBox={`0 0 ${c.w} ${c.h}`}
+						role="group"
+						aria-label={textos.habilidades}
+						data-constelacion
+					>
+						<defs>
+							<radialGradient id={`brillo-${id}`}>
+								<stop offset="0%" class="brillo-centro" />
+								<stop offset="100%" class="brillo-borde" />
+							</radialGradient>
+						</defs>
+
+						<g aria-hidden="true">
+							{c.estrellas.map((e) => (
+								<circle cx={e.x.toFixed(1)} cy={e.y.toFixed(1)} r={e.r.toFixed(2)} opacity={e.o.toFixed(2)} class="estrella" />
+							))}
+						</g>
+
+						<g aria-hidden="true">
+							{c.grupos.map((g) => (
+								<>
+									<text x={g.x} y={g.ty} text-anchor={g.ancla} class="grupo-titulo">
+										{g.titulo}
+									</text>
+									<line x1={g.x1} x2={g.x2} y1={g.ly} y2={g.ly} class="grupo-linea" />
+								</>
+							))}
+						</g>
+
+						<g class="aristas" aria-hidden="true">
+							{lineasHab.map(([a, b]) => (
+								<line
+									class="arista arista-hab"
+									pathLength="1"
+									data-a={a}
+									data-b={b}
+									x1={c.nodos[a].x}
+									y1={c.nodos[a].y}
+									x2={c.nodos[b].x}
+									y2={c.nodos[b].y}
+								/>
+							))}
+						</g>
+
+						<g>
+							{habilidades.map((h, si) => {
+								const n = c.nodos[si];
+								const [tx, ta, ty] =
+									n.lado === 'debajo' ? [n.x, 'middle', n.y + 36] : n.lado === 'izq' ? [n.x - 28, 'end', n.y] : [n.x + 28, 'start', n.y];
+								return (
+									<g class="nodo nodo-skill" data-s={si} tabindex="0" role="button" aria-label={`${textos.habilidad}: ${h.nombre} (${grupoDe[si]})`} style={estiloMarca(h.icono)}>
+										<circle cx={n.x} cy={n.y} r="40" class="nodo-zona" />
+										<circle cx={n.x} cy={n.y} r="34" fill={`url(#brillo-${id})`} class="brillo" />
+										<rect x={n.x - 18} y={n.y - 18} width="36" height="36" rx="11" class="skill-chip" />
+										{h.icono && <use href={`#i-${h.slug}`} x={n.x - 10} y={n.y - 10} width="20" height="20" class="skill-icono" />}
+										<text x={tx} y={ty} text-anchor={ta} dominant-baseline="central">
+											{h.nombre}
+										</text>
+									</g>
+								);
+							})}
+						</g>
+					</svg>
 				))
 			}
 		</div>
 	</div>
 </section>
+
+<script>
+	// Al activar un nodo se encienden sus líneas y sus vecinos; el resto se apaga.
+	document.querySelectorAll<SVGSVGElement>('[data-constelacion]').forEach((svg) => {
+		const aristas = Array.from(svg.querySelectorAll<SVGElement>('.arista'));
+		const nodos = Array.from(svg.querySelectorAll<SVGElement>('.nodo'));
+
+		const activar = (nodo: SVGElement | null) => {
+			svg.toggleAttribute('data-activo', !!nodo);
+			aristas.forEach((a) => a.classList.remove('on'));
+			nodos.forEach((n) => n.classList.remove('on'));
+			if (!nodo) return;
+			nodo.classList.add('on');
+			const { t, p, s } = nodo.dataset;
+			const encender = (selector: string) => svg.querySelector(selector)?.classList.add('on');
+			aristas.forEach((a) => {
+				const { t: at, p: ap, a: aa, b: ab } = a.dataset;
+				if (t !== undefined && at === t) {
+					a.classList.add('on');
+					encender(`.nodo-proy[data-p="${ap}"]`);
+				} else if (p !== undefined && ap === p) {
+					a.classList.add('on');
+					encender(`.nodo-tech[data-t="${at}"]`);
+				} else if (s !== undefined && (aa === s || ab === s)) {
+					a.classList.add('on');
+					encender(`.nodo-skill[data-s="${aa === s ? ab : aa}"]`);
+				}
+			});
+		};
+
+		const fino = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+		nodos.forEach((n) => {
+			// Sólo el foco de teclado: un toque también enfoca y estropearía el doble toque.
+			n.addEventListener('focus', () => n.matches(':focus-visible') && activar(n));
+			n.addEventListener('blur', () => activar(null));
+			if (fino) {
+				n.addEventListener('pointerenter', () => activar(n));
+				n.addEventListener('pointerleave', () => activar(null));
+			}
+		});
+
+		// En táctil: el primer toque en un proyecto enseña sus conexiones y el
+		// segundo sigue el enlace a la tarjeta; en lo demás, un toque alterna.
+		if (!fino) {
+			svg.addEventListener('click', (e) => {
+				const nodo = (e.target as Element).closest<SVGElement>('.nodo');
+				if (!nodo) return activar(null);
+				const encendido = nodo.classList.contains('on');
+				if (nodo.classList.contains('nodo-proy')) {
+					if (!encendido) {
+						e.preventDefault();
+						activar(nodo);
+					}
+					return;
+				}
+				activar(encendido ? null : nodo);
+			});
+		}
+	});
+</script>

@@ -13,10 +13,7 @@ const otroLocale: Locale = locale === 'es' ? 'en' : 'es';
 const otro = UI[otroLocale].notFound;
 const otroBase = localePath(otroLocale, '/');
 const otroNav = UI[otroLocale].nav;
-const pieTraducido = [
-	[ui.footer.rights, UI[otroLocale].footer.rights],
-	[ui.footer.built, UI[otroLocale].footer.built],
-];
+const pieTraducido = [[ui.footer.built, UI[otroLocale].footer.built]];
 
 const steps = [
 	{ cmd: 'cd __PATH__', out: 'cd: no such file or directory: __PATH__' },
@@ -28,17 +25,11 @@ const steps = [
 ];
 ---
 
-<section class="relative overflow-hidden">
-	<div class="pointer-events-none absolute inset-0 bg-grid mask-fade-b opacity-50" aria-hidden="true"></div>
-	<div
-		class="pointer-events-none absolute left-1/2 top-[-10%] h-[420px] w-full max-w-[820px] -translate-x-1/2 rounded-full bg-accent/10 blur-[120px]"
-		aria-hidden="true"
-	>
-	</div>
+<section class="relative">
 
 	<div class="relative mx-auto max-w-3xl px-5 pb-24 pt-28 sm:px-8 sm:pb-32 sm:pt-36">
 		<div class="animate-rise">
-			<p class="font-mono text-sm text-accent">404</p>
+			<p class="font-mono text-sm text-accent-ink">404</p>
 
 			<h1
 				class="mt-4 text-[2.2rem] font-semibold leading-[1.1] tracking-tight sm:text-5xl"
@@ -56,9 +47,9 @@ const steps = [
 					id="volver-inicio"
 					href={base}
 					data-otro-inicio={otroBase}
-					class="group inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-medium text-white transition-[filter,box-shadow] hover:brightness-110 hover:shadow-lg hover:shadow-accent/25"
+					class="group inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-medium text-on-accent transition-[filter,scale] duration-150 ease-out hover:brightness-110 motion-safe:active:scale-[0.97]"
 				>
-					<svg class="h-4 w-4 transition-transform group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<svg class="h-4 w-4 transition-transform duration-150 ease-out group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M19 12H5M12 19l-7-7 7-7"></path>
 					</svg>
 					<span data-otro-idioma={otro.back}>{ui.notFound.back}</span>
@@ -66,7 +57,7 @@ const steps = [
 			</div>
 		</div>
 
-		<div id="term-404" class="mt-12 animate-rise [animation-delay:120ms]">
+		<div id="term-404" class="mt-12 animate-rise [animation-delay:80ms]">
 			<Terminal user="fabian" host="buildbyfabi" steps={steps} dense />
 		</div>
 	</div>

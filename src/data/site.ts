@@ -34,6 +34,8 @@ export type Project = {
 	year: string;
 	status?: 'live' | 'wip' | 'oss' | 'private' | 'archived';
 	image?: ImageMetadata;
+	/** Logo del proyecto, ya recortado en círculo (public/images/proyectos). Sin él se pinta un monograma. */
+	logo?: string;
 	/** Marca la tarjeta con «código privado»: explica por qué no hay enlace al repositorio. */
 	privateCode?: boolean;
 	stack: string[];
@@ -46,6 +48,7 @@ export type Project = {
 export const PROJECTS: Project[] = [
 	{
 		slug: 'suncar',
+		logo: '/images/proyectos/logo-suncar.webp',
 		featured: true,
 		year: '2025 — hoy',
 		status: 'live',
@@ -61,8 +64,8 @@ export const PROJECTS: Project[] = [
 			en: 'Corporate site and internal system for a solar energy company',
 		},
 		description: {
-			es: 'Desarrollo el software de SunCar, empresa de instalación de paneles solares. Construí su sitio corporativo en Next.js y lidero parte del sistema interno de gestión: brigadas y servicios, control de materiales con kardex, fichas de costo y contabilidad, con reportes en PDF y Excel y soporte offline para el trabajo en campo.',
-			en: 'I build the software at SunCar, a solar panel installation company. I developed their corporate site in Next.js and lead part of the internal management system: crews and services, material control with kardex, cost sheets and accounting, with PDF and Excel reports and offline support for fieldwork.',
+			es: 'Desarrollo el software de SunCar, empresa de instalación de paneles solares. Construí su sitio corporativo en Next.js y lidero parte del sistema interno de gestión: brigadas y servicios, inventario de materiales, costos y contabilidad, con reportes en PDF y Excel y soporte offline para el trabajo en campo.',
+			en: 'I build the software at SunCar, a solar panel installation company. I developed their corporate site in Next.js and lead part of the internal management system: crews and services, material inventory, costing and accounting, with PDF and Excel reports and offline support for fieldwork.',
 		},
 	},
 	{
@@ -85,6 +88,7 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'llego',
+		logo: '/images/proyectos/logo-llego.webp',
 		year: '2026',
 		status: 'live',
 		privateCode: true,
@@ -104,7 +108,29 @@ export const PROJECTS: Project[] = [
 		},
 	},
 	{
+		slug: 'shellbox',
+		logo: '/images/proyectos/logo-shellbox.webp',
+		year: '2025 — hoy',
+		status: 'live',
+		privateCode: true,
+		image: shellboxImg,
+		stack: ['Astro', 'Svelte', 'TypeScript', 'MongoDB', 'S3'],
+		links: {
+			live: 'https://shellbox.up.railway.app',
+		},
+		title: { es: 'ShellBox', en: 'ShellBox' },
+		tagline: {
+			es: 'Encargos desde Estados Unidos hasta La Habana',
+			en: 'Parcel service from the United States to Havana',
+		},
+		description: {
+			es: 'Sitio y panel de ShellBox, agencia que compra en tiendas de Estados Unidos y lleva el pedido hasta Cuba. Astro con renderizado en servidor e islas de Svelte solo donde hace falta interactividad: catálogo de stock sobre MongoDB, panel de administración con sesión por JWT y subida de fotos a S3, y todas las tarifas centralizadas en un único archivo de configuración.',
+			en: 'Site and dashboard for ShellBox, an agency that buys from US stores and ships the order to Cuba. Astro with server rendering and Svelte islands only where interactivity is needed: a stock catalogue backed by MongoDB, an admin panel with JWT sessions and photo uploads to S3, and every rate centralised in a single configuration file.',
+		},
+	},
+	{
 		slug: 'trimio',
+		logo: '/images/proyectos/logo-trimio.webp',
 		year: '2026',
 		status: 'wip',
 		privateCode: true,
@@ -119,26 +145,6 @@ export const PROJECTS: Project[] = [
 		description: {
 			es: 'Plataforma de reservas online para barberías: cada negocio tiene su página pública con su marca, sus servicios y sus horarios, y el barbero gestiona citas, equipo y galería desde su panel. Producto propio, con demo abierta y en desarrollo activo.',
 			en: 'Online booking platform for barbershops: each business gets a public page with its own brand, services and opening hours, while the barber manages appointments, staff and gallery from a dashboard. My own product, with an open demo and in active development.',
-		},
-	},
-	{
-		slug: 'shellbox',
-		year: '2025 — hoy',
-		status: 'live',
-		privateCode: true,
-		image: shellboxImg,
-		stack: ['Astro', 'Svelte', 'TypeScript', 'MongoDB', 'S3'],
-		links: {
-			live: 'https://shellbox.up.railway.app',
-		},
-		title: { es: 'ShellBox Encargos', en: 'ShellBox Encargos' },
-		tagline: {
-			es: 'Encargos desde Estados Unidos hasta La Habana',
-			en: 'Parcel service from the United States to Havana',
-		},
-		description: {
-			es: 'Sitio y panel de ShellBox, agencia que compra en tiendas de Estados Unidos y lleva el pedido hasta Cuba. Astro con renderizado en servidor e islas de Svelte solo donde hace falta interactividad: catálogo de stock sobre MongoDB, panel de administración con sesión por JWT y subida de fotos a S3, y todas las tarifas centralizadas en un único archivo de configuración.',
-			en: 'Site and dashboard for ShellBox, an agency that buys from US stores and ships the order to Cuba. Astro with server rendering and Svelte islands only where interactivity is needed: a stock catalogue backed by MongoDB, an admin panel with JWT sessions and photo uploads to S3, and every rate centralised in a single configuration file.',
 		},
 	},
 	{
@@ -161,6 +167,7 @@ export const PROJECTS: Project[] = [
 	},
 	{
 		slug: 'panal-som',
+		logo: '/images/proyectos/logo-panal-som.webp',
 		secondary: true,
 		year: '2025 — 2026',
 		status: 'oss',
@@ -197,7 +204,6 @@ export const STACK: {
 			{ name: 'Nuxt', icon: 'nuxt' },
 			{ name: 'TypeScript', icon: 'typescript' },
 			{ name: 'Tailwind CSS', icon: 'tailwindcss' },
-			{ name: 'shadcn/ui', icon: 'shadcnui' },
 		],
 	},
 	{

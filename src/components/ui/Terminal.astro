@@ -1,114 +1,272 @@
 ---
-export type TerminalStep = { cmd: string; out: string; tone?: 'accent' | 'muted' };
+import type { TerminalStep } from '../../i18n/ui';
+import type { DatosConsola } from '../../lib/consola';
+
+type Step = TerminalStep & { links?: { label: string; href: string }[] };
 
 interface Props {
 	user: string;
 	host: string;
-	steps: TerminalStep[];
+	steps: Step[];
 	/** Menos alto reservado, para terminales de pocas líneas. */
 	dense?: boolean;
+	/** Con datos, al acabar la secuencia el terminal acepta comandos. */
+	consola?: { datos: DatosConsola; cv: string; etiqueta: string; pista: string };
 }
 
-const { user, host, steps, dense = false } = Astro.props;
+const { user, host, steps, dense = false, consola } = Astro.props;
 
 const toneClass = (tone?: string) =>
-	tone === 'accent' ? 'text-accent' : tone === 'muted' ? 'text-faint' : 'text-muted';
+	tone === 'accent' ? 'ph' : tone === 'muted' ? 'ph-faint' : 'ph-dim';
 ---
 
 <div
-	class="w-full overflow-hidden rounded-xl border border-border bg-card shadow-2xl shadow-black/5 dark:shadow-black/40"
+	class="crt"
+	data-term
+	data-estado="listo"
+	data-consola={consola ? JSON.stringify(consola.datos) : undefined}
+	data-cv={consola?.cv}
 >
-	<div class="flex items-center gap-3 border-b border-border bg-bg-subtle px-4 py-2.5">
-		<div class="flex gap-1.5" aria-hidden="true">
-			<span class="h-2.5 w-2.5 rounded-full bg-[#ff5f57]"></span>
-			<span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]"></span>
-			<span class="h-2.5 w-2.5 rounded-full bg-[#28c840]"></span>
-		</div>
-		<span class="flex-1 truncate text-center font-mono text-[11px] text-faint">
-			{user}@{host} — zsh
-		</span>
-		<div class="w-[42px]" aria-hidden="true"></div>
+	<div class="crt-bar">
+		<span>{user}@{host}: ~</span>
+		<span aria-hidden="true">tty1</span>
 	</div>
 
-	<div
-		id="term"
-		class:list={[
-			'px-4 py-4 font-mono text-[12.5px] leading-relaxed sm:text-[13px]',
-			dense ? 'min-h-[210px]' : 'min-h-[300px] sm:min-h-[320px]',
-		]}
-	>
-		{
-			steps.map((step, i) => (
-				<>
-					<p class="term-line flex flex-wrap items-baseline gap-x-2" data-kind="cmd">
-						<span class="shrink-0 select-none">
-							<span class="text-accent">{user}</span><span class="text-faint">@</span><span class="text-muted">{host}</span><span class="text-faint"> ~ </span><span class="text-accent">$</span>
-						</span>
-						<span class="term-txt text-text" data-text={step.cmd}>{step.cmd}</span>
+	<div class="crt-screen">
+		<div
+			data-out
+			class:list={[
+				'crt-out px-4 py-4 font-mono text-[13px] leading-relaxed',
+				dense ? 'h-[180px]' : 'h-[300px] sm:h-[320px]',
+			]}
+		>
+			{
+				steps.map((step, i) => (
+					<>
+						<p class="term-line" data-kind="cmd">
+							<span class="ph select-none">$ </span>
+							<span class="term-txt ph-text" data-text={step.cmd}>
+								{step.cmd}
+							</span>
+						</p>
+						{step.links ? (
+							<p class="term-line flex flex-wrap gap-x-4 gap-y-0.5" data-kind="out">
+								{step.links.map((l) => (
+									<a href={l.href} class="crt-link">
+										{l.label}
+									</a>
+								))}
+							</p>
+						) : (
+							<p class:list={['term-line', toneClass(step.tone)]} data-kind="out">
+								{step.out}
+							</p>
+						)}
+						{i < steps.length - 1 && <div class="term-line h-3" data-kind="blank" />}
+					</>
+				))
+			}
+
+			{
+				consola ? (
+					<form data-prompt class="term-line mt-3 flex items-baseline gap-2" data-kind="final" autocomplete="off">
+						<label for="crt-input" class="ph select-none">
+							$
+						</label>
+						<input
+							id="crt-input"
+							type="text"
+							enterkeyhint="send"
+							autocapitalize="off"
+							autocorrect="off"
+							spellcheck="false"
+							aria-label={consola.etiqueta}
+							placeholder={consola.pista}
+							class="crt-input min-w-0 flex-1"
+						/>
+					</form>
+				) : (
+					<p class="term-line mt-3" data-kind="final">
+						<span class="ph select-none">$ </span>
+						<span class="crt-cursor" aria-hidden="true" />
 					</p>
-					<p class:list={['term-line', toneClass(step.tone)]} data-kind="out">
-						{step.out}
-					</p>
-					{i < steps.length - 1 && <div class="term-line h-3" data-kind="blank" />}
-				</>
-			))
-		}
-		<p class="term-line term-final flex flex-wrap items-baseline gap-x-2" data-kind="final">
-			<span class="shrink-0 select-none">
-				<span class="text-accent">{user}</span><span class="text-faint">@</span><span class="text-muted">{host}</span><span class="text-faint"> ~ </span><span class="text-accent">$</span>
-			</span>
-			<span class="term-caret inline-block h-[1em] w-[7px] translate-y-[2px] bg-accent animate-blink" aria-hidden="true"></span>
-		</p>
+				)
+			}
+		</div>
 	</div>
 </div>
 
 <script>
-	const TYPE = 20;
-	const AFTER_CMD = 190;
-	const AFTER_OUT = 110;
-	const START = 240;
+	import { ejecutar, completar, type DatosConsola, type Linea } from '../../lib/consola';
 
-	const term = document.getElementById('term');
-	if (term) {
-		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-		const lines = Array.from(term.querySelectorAll<HTMLElement>('.term-line'));
+	const TYPE = 22;
+	const AFTER_CMD = 200;
+	const AFTER_OUT = 120;
+	const ENCENDIDO = 620;
 
-		if (!reduced && lines.length) {
-			// Punto de partida: todo oculto salvo el cursor final, que viaja con la escritura.
-			lines.forEach((l) => (l.style.display = 'none'));
-			term.querySelectorAll<HTMLElement>('.term-txt').forEach((s) => (s.textContent = ''));
+	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-			const caretLine = term.querySelector<HTMLElement>('.term-final');
-			const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+	const tonoClase = (t?: Linea['tono']) =>
+		t === 'acento' ? 'ph' : t === 'tenue' ? 'ph-faint' : t === 'error' ? 'ph-error' : 'ph-dim';
 
-			const run = async () => {
-				await wait(START);
-				for (const line of lines) {
-					const kind = line.dataset.kind;
-					if (kind === 'final') break;
+	document.querySelectorAll<HTMLElement>('[data-term]').forEach((term) => {
+		const out = term.querySelector<HTMLElement>('[data-out]');
+		if (!out) return;
+		const lines = Array.from(out.querySelectorAll<HTMLElement>('.term-line'));
+		const prompt = term.querySelector<HTMLFormElement>('[data-prompt]');
+		const input = prompt?.querySelector<HTMLInputElement>('input') ?? null;
 
-					line.style.display = kind === 'blank' ? 'block' : 'flex';
-					if (kind === 'blank') line.style.display = 'block';
+		// ---------- La consola ----------
+		const activarConsola = () => {
+			if (!prompt || !input || !term.dataset.consola) return;
+			const datos = JSON.parse(term.dataset.consola) as DatosConsola;
+			const historial: string[] = [];
+			let pos = 0;
 
-					if (kind === 'cmd') {
-						const span = line.querySelector<HTMLElement>('.term-txt');
-						const text = span?.dataset.text ?? '';
-						span?.classList.add('typing');
-						for (let i = 1; i <= text.length; i++) {
-							if (span) span.textContent = text.slice(0, i);
-							await wait(TYPE);
-						}
-						await wait(AFTER_CMD);
-						span?.classList.remove('typing');
-					} else if (kind === 'out') {
-						line.style.display = 'block';
-						await wait(AFTER_OUT);
+			const limpiar = () => Array.from(out.children).forEach((n) => n !== prompt && n.remove());
+
+			const pintar = (l: Linea) => {
+				const p = document.createElement('p');
+				p.className = `term-line ph-nueva whitespace-pre-wrap ${tonoClase(l.tono)}`;
+				if (l.antes) p.append(Object.assign(document.createElement('span'), { className: 'ph-faint', textContent: l.antes }));
+				if (l.href) {
+					const a = document.createElement('a');
+					a.href = l.href;
+					a.className = 'crt-link';
+					a.textContent = l.texto;
+					if (l.externo) {
+						a.target = '_blank';
+						a.rel = 'noopener noreferrer';
 					}
+					p.append(a);
+				} else {
+					p.append(l.texto);
 				}
-				if (caretLine) caretLine.style.display = 'flex';
+				if (l.resto) p.append(Object.assign(document.createElement('span'), { className: 'ph-faint', textContent: l.resto }));
+				prompt.before(p);
 			};
 
-			run();
+			prompt.addEventListener('submit', (e) => {
+				e.preventDefault();
+				const entrada = input.value;
+				input.value = '';
+				if (entrada.trim()) historial.push(entrada);
+				pos = historial.length;
+
+				const eco = document.createElement('p');
+				eco.className = 'term-line mt-2';
+				const signo = Object.assign(document.createElement('span'), { className: 'ph select-none', textContent: '$ ' });
+				const texto = Object.assign(document.createElement('span'), { className: 'ph-text', textContent: entrada });
+				eco.append(signo, texto);
+				prompt.before(eco);
+
+				const r = ejecutar(entrada, datos);
+				r.lineas.forEach(pintar);
+
+				if (r.accion === 'limpiar') limpiar();
+				else if (r.accion === 'tema') document.getElementById('theme-toggle')?.click();
+				else if (r.accion === 'cv' && term.dataset.cv) {
+					Object.assign(document.createElement('a'), { href: term.dataset.cv, download: '' }).click();
+				}
+				out.scrollTop = out.scrollHeight;
+			});
+
+			input.addEventListener('keydown', (e) => {
+				if (e.key === 'ArrowUp' && historial.length) {
+					e.preventDefault();
+					pos = Math.max(0, pos - 1);
+					input.value = historial[pos] ?? '';
+				} else if (e.key === 'ArrowDown' && historial.length) {
+					e.preventDefault();
+					pos = Math.min(historial.length, pos + 1);
+					input.value = historial[pos] ?? '';
+				} else if (e.key === 'Tab') {
+					const hecho = completar(input.value, datos);
+					if (hecho) {
+						e.preventDefault();
+						input.value = hecho;
+					}
+				} else if (e.key === 'l' && e.ctrlKey) {
+					e.preventDefault();
+					limpiar();
+				} else if (e.key === 'Escape') {
+					input.blur();
+				}
+			});
+
+			// Tocar la pantalla lleva al prompt, salvo que se esté seleccionando
+			// texto o se toque un enlace.
+			term.addEventListener('click', (e) => {
+				if ((e.target as HTMLElement).closest('a, input')) return;
+				if (String(window.getSelection())) return;
+				input.focus({ preventScroll: true });
+			});
+		};
+
+		// ---------- La secuencia de entrada ----------
+		if (reduced || !('IntersectionObserver' in window)) {
+			activarConsola();
+			return;
 		}
-	}
+
+		// Un clic o una tecla durante la secuencia la termina al momento.
+		let rapido = false;
+		const wait = (ms: number) => (rapido ? Promise.resolve() : new Promise((r) => setTimeout(r, ms)));
+
+		// Punto de partida: pantalla apagada y líneas ocultas.
+		term.dataset.estado = 'apagado';
+		lines.forEach((l) => (l.style.display = 'none'));
+		out.querySelectorAll<HTMLElement>('.term-txt').forEach((s) => (s.textContent = ''));
+
+		// Cada letra nace incandescente y se enfría, como el fósforo.
+		const teclear = async (span: HTMLElement, text: string) => {
+			span.classList.add('typing');
+			for (const ch of text) {
+				if (rapido) break;
+				span.append(Object.assign(document.createElement('span'), { className: 'ph-fresco', textContent: ch }));
+				await wait(TYPE);
+			}
+			await wait(AFTER_CMD);
+			span.classList.remove('typing');
+			span.textContent = text;
+		};
+
+		const run = async () => {
+			term.dataset.estado = 'encendiendo';
+			await wait(ENCENDIDO);
+			term.dataset.estado = 'escribiendo';
+
+			for (const line of lines) {
+				const kind = line.dataset.kind;
+				line.style.display = '';
+				if (kind === 'final') break;
+				if (kind === 'cmd') {
+					const span = line.querySelector<HTMLElement>('.term-txt');
+					if (span) await teclear(span, span.dataset.text ?? '');
+				} else if (kind === 'out') {
+					line.classList.add('ph-nueva');
+					await wait(AFTER_OUT);
+				}
+			}
+			term.dataset.estado = 'listo';
+			activarConsola();
+		};
+
+		const saltar = () => {
+			if (term.dataset.estado !== 'listo') rapido = true;
+		};
+		term.addEventListener('pointerdown', saltar);
+		window.addEventListener('keydown', saltar, { once: true });
+
+		// Empieza cuando se ve: en móvil el terminal queda bajo el pliegue.
+		const io = new IntersectionObserver(
+			(entradas) => {
+				if (!entradas.some((e) => e.isIntersecting)) return;
+				io.disconnect();
+				run();
+			},
+			{ threshold: 0.4 }
+		);
+		io.observe(term);
+	});
 </script>

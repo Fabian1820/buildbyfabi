@@ -64,7 +64,7 @@ const jsonLd = {
 
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content={SITE.domain} />
-		<meta property="og:locale" content={locale === 'es' ? 'es_ES' : 'en_US'} />
+		<meta property="og:locale" content={locale === 'es' ? 'es_LA' : 'en_US'} />
 		<meta property="og:title" content={pageTitle} />
 		<meta property="og:description" content={pageDesc} />
 		<meta property="og:url" content={canonical} />
@@ -78,17 +78,19 @@ const jsonLd = {
 		<meta name="twitter:description" content={pageDesc} />
 		<meta name="twitter:image" content={ogImage} />
 
-		<meta name="theme-color" content="#0a0d14" media="(prefers-color-scheme: dark)" />
-		<meta name="theme-color" content="#f7f5f1" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#0a0d14" />
 
 		<script is:inline set:html={JSON.stringify(jsonLd)} type="application/ld+json" />
 
 		{/* Evita el flash de tema incorrecto: corre antes del primer paint */}
 		<script is:inline>
 			(() => {
-				const stored = localStorage.getItem('theme');
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				const dark = stored ? stored === 'dark' : prefersDark;
+				let stored = null;
+				try {
+					stored = localStorage.getItem('theme');
+				} catch {}
+				// Abre en oscuro salvo que el visitante haya elegido el claro.
+				const dark = stored ? stored === 'dark' : true;
 				document.documentElement.classList.toggle('dark', dark);
 
 				// Marca el documento antes de pintar para que lo revelable nazca
@@ -104,7 +106,7 @@ const jsonLd = {
 	<body class="min-h-screen bg-bg text-text">
 		<a
 			href="#main"
-			class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-white"
+			class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-on-accent"
 		>
 			{locale === 'es' ? 'Saltar al contenido' : 'Skip to content'}
 		</a>
@@ -151,7 +153,7 @@ const jsonLd = {
 
    → fernandezfabian2003@gmail.com
 `,
-				'color:#8b5cf6;font-family:monospace;font-size:12px;line-height:1.5'
+				'color:#ffb000;font-family:monospace;font-size:12px;line-height:1.5'
 			);
 		</script>
 	</body>
